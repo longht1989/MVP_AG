@@ -1,0 +1,65 @@
+<Window x:Class="WindowsVideoPreview.Views.TimecodeJumpDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Jump to Timecode / Frame - LumiePlayer" 
+        Icon="pack://application:,,,/favicon.png"
+        Height="210" Width="400"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#18181B"
+        Foreground="#F4F4F5">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#27272A"/>
+            <Setter Property="Foreground" Value="#F4F4F5"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#3F3F46"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Enter Timecode (hh:mm:ss.fff) or Frame number (#1234):" 
+                   FontSize="13" Foreground="#A1A1AA" Margin="0,0,0,8"/>
+
+        <TextBox Grid.Row="1" x:Name="InputTextBox" 
+                 Height="36" FontSize="16" FontFamily="Consolas, monospace"
+                 Background="#09090B" Foreground="#38BDF8"
+                 BorderBrush="#3B82F6" BorderThickness="1"
+                 Padding="8,6" VerticalContentAlignment="Center"/>
+
+        <TextBlock Grid.Row="2" Text="Examples: 00:01:25.500, 85.5s, or #2500" 
+                   FontSize="11" Foreground="#71717A" Margin="0,6,0,0"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Jump" Width="90" IsDefault="True" Click="OnJumpClick" 
+                    Background="#2563EB" BorderBrush="#1D4ED8" Margin="0,0,10,0"/>
+            <Button Content="Cancel" Width="90" IsCancel="True" Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

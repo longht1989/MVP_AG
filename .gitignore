@@ -1,0 +1,22 @@
+## Build and output directories
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio / VS Code / IDE
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Log files
+*.log
+crash.log
+
+## Windows Thumbs
+Thumbs.db
+ehthumbs.db
+Desktop.ini
