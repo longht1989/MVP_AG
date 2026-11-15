@@ -16,20 +16,24 @@
         </wfi:WindowsFormsHost>
 
         <!-- Placeholder when no video is loaded -->
-        <Grid x:Name="PlaceholderGrid" Background="#09090B" Visibility="Visible" MouseDown="OnPlaceholderMouseDown">
+        <Grid x:Name="PlaceholderGrid" Background="{StaticResource BrushBgBase}" Visibility="Visible" MouseDown="OnPlaceholderMouseDown">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Border Width="64" Height="64" CornerRadius="32" Background="#18181B" BorderBrush="#27272A" BorderThickness="1" Margin="0,0,0,16">
-                    <TextBlock Text="▶" FontSize="26" Foreground="#52525B" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                <Border Width="56" Height="56" CornerRadius="12" Background="{StaticResource BrushBgSurface}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" Margin="0,0,0,14" HorizontalAlignment="Center">
+                    <Path Data="{StaticResource IconFilm}" Width="24" Height="24" Fill="{StaticResource BrushAccent}" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
-                <TextBlock x:Name="PlaceholderTitle" Text="No Video Loaded" FontSize="16" FontWeight="SemiBold" Foreground="#D4D4D8" HorizontalAlignment="Center"/>
-                <TextBlock Text="Drag &amp; drop from playlist or Explorer, or click to open" FontSize="12" Foreground="#71717A" HorizontalAlignment="Center" Margin="0,6,0,0"/>
-                <Button Content="Open File..." HorizontalAlignment="Center" Margin="0,16,0,0" Padding="14,6"
-                        Background="#27272A" Foreground="#F4F4F5" BorderBrush="#3F3F46" Cursor="Hand" Click="OnOpenClick"/>
+                <TextBlock x:Name="PlaceholderTitle" Text="No Video Loaded" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" HorizontalAlignment="Center"/>
+                <TextBlock Text="Drag &amp; drop from playlist or Explorer, or click to open" FontSize="12" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                <Button Style="{StaticResource ControlBtn}" HorizontalAlignment="Center" Margin="0,16,0,0" Padding="14,6" Click="OnOpenClick">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconFolder}" Width="14" Height="14" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform" Margin="0,0,6,0"/>
+                        <TextBlock Text="Open File..." FontWeight="Medium" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 
         <!-- Top Header Info Overlay -->
-        <Border VerticalAlignment="Top" Background="#CC09090B" Padding="12,8" Margin="8" CornerRadius="6"
+        <Border VerticalAlignment="Top" Background="#DD0D0D12" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" Padding="10,6" Margin="10" CornerRadius="6"
                 x:Name="TopHeaderOverlay" Visibility="Collapsed">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -38,44 +42,47 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border x:Name="RoleBadge" Background="#2563EB" CornerRadius="4" Padding="6,2" Margin="0,0,10,0">
+                <Border x:Name="RoleBadge" Background="{StaticResource BrushAccentActive}" CornerRadius="4" Padding="6,2" Margin="0,0,10,0">
                     <TextBlock x:Name="RoleText" Text="VIDEO A" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
                 </Border>
 
                 <TextBlock Grid.Column="1" x:Name="FileNameText" Text="video.mp4" FontWeight="SemiBold" 
-                           Foreground="#F4F4F5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                           Foreground="{StaticResource BrushTextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#27272A" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
-                        <TextBlock x:Name="ResolutionBadge" Text="1920x1080" FontSize="11" Foreground="#38BDF8"/>
+                    <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                        <TextBlock x:Name="ResolutionBadge" Text="1920x1080" FontSize="11" Foreground="{StaticResource BrushAccent}" FontWeight="SemiBold"/>
                     </Border>
-                    <Border Background="#27272A" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
-                        <TextBlock x:Name="FpsBadge" Text="60 fps" FontSize="11" Foreground="#A1A1AA"/>
+                    <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                        <TextBlock x:Name="FpsBadge" Text="60 fps" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
                     </Border>
-                    <Button x:Name="CloseButton" Content="✕" Width="24" Height="24" Padding="0"
-                            Background="Transparent" BorderThickness="0" Foreground="#A1A1AA" Cursor="Hand"
-                            Visibility="Collapsed" Click="OnCloseClick"/>
+                    <Button x:Name="CloseButton" Width="22" Height="22" Padding="0"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                            Visibility="Collapsed" Click="OnCloseClick" ToolTip="Close Video B">
+                        <Path Data="{StaticResource IconClear}" Width="10" Height="10" Fill="{StaticResource BrushTextSecondary}" Stretch="Uniform"/>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Bottom Timecode & Frame Overlay -->
-        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="#CC09090B" 
-                Padding="10,6" Margin="8" CornerRadius="4" x:Name="BottomOverlay" Visibility="Collapsed">
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="#DD0D0D12" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1"
+                Padding="10,5" Margin="10" CornerRadius="4" x:Name="BottomOverlay" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
                 <TextBlock x:Name="TimecodeText" Text="00:00:00.000" FontFamily="Consolas, monospace" 
-                           FontSize="14" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,12,0"/>
+                           FontSize="13" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0,0,10,0"/>
                 <TextBlock x:Name="FrameCountText" Text="Frame: 0" FontFamily="Consolas, monospace" 
-                           FontSize="12" Foreground="#A1A1AA" VerticalAlignment="Center"/>
+                           FontSize="11" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
         <!-- Drop Target Visual Highlight Overlay -->
-        <Border x:Name="DropHighlightBorder" BorderBrush="#38BDF8" BorderThickness="3" 
-                Background="#661E3A8A" Visibility="Collapsed" IsHitTestVisible="False" CornerRadius="8" Margin="6">
+        <Border x:Name="DropHighlightBorder" BorderBrush="{StaticResource BrushAccent}" BorderThickness="2" 
+                Background="#DD0D1B2A" Visibility="Collapsed" IsHitTestVisible="False" CornerRadius="8" Margin="8">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="📥 Drop Video Here" FontWeight="Bold" FontSize="20" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-                <TextBlock x:Name="DropTargetHintText" Text="Will load into this player" FontSize="13" Foreground="#93C5FD" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                <Path Data="{StaticResource IconUpload}" Width="36" Height="36" Fill="{StaticResource BrushAccent}" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="Drop Video Here" FontWeight="Bold" FontSize="18" Foreground="{StaticResource BrushTextPrimary}" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="DropTargetHintText" Text="Will load into this player" FontSize="12" Foreground="{StaticResource BrushAccentHover}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
     </Grid>

@@ -4,6 +4,234 @@
              xmlns:local="clr-namespace:WindowsVideoPreview"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <!-- ============================================================ -->
+        <!-- LUMIEPLAYER STUDIO PRO DESIGN SYSTEM TOKENS                  -->
+        <!-- ============================================================ -->
+
+        <!-- Color Palette: Backgrounds -->
+        <Color x:Key="ColorBgBase">#09090C</Color>
+        <Color x:Key="ColorBgElevated">#121216</Color>
+        <Color x:Key="ColorBgSurface">#18181D</Color>
+        <Color x:Key="ColorBgSurfaceHover">#22222A</Color>
+        <Color x:Key="ColorBgInput">#1A1A22</Color>
+        <Color x:Key="ColorBgControl">#1F1F27</Color>
+        <Color x:Key="ColorBgControlHover">#2C2C38</Color>
+        <Color x:Key="ColorBgControlPressed">#16161D</Color>
+
+        <SolidColorBrush x:Key="BrushBgBase" Color="{StaticResource ColorBgBase}"/>
+        <SolidColorBrush x:Key="BrushBgElevated" Color="{StaticResource ColorBgElevated}"/>
+        <SolidColorBrush x:Key="BrushBgSurface" Color="{StaticResource ColorBgSurface}"/>
+        <SolidColorBrush x:Key="BrushBgSurfaceHover" Color="{StaticResource ColorBgSurfaceHover}"/>
+        <SolidColorBrush x:Key="BrushBgInput" Color="{StaticResource ColorBgInput}"/>
+        <SolidColorBrush x:Key="BrushBgControl" Color="{StaticResource ColorBgControl}"/>
+        <SolidColorBrush x:Key="BrushBgControlHover" Color="{StaticResource ColorBgControlHover}"/>
+        <SolidColorBrush x:Key="BrushBgControlPressed" Color="{StaticResource ColorBgControlPressed}"/>
+
+        <!-- Color Palette: Borders -->
+        <Color x:Key="ColorBorderSubtle">#25252F</Color>
+        <Color x:Key="ColorBorderStrong">#3A3A4A</Color>
+        <SolidColorBrush x:Key="BrushBorderSubtle" Color="{StaticResource ColorBorderSubtle}"/>
+        <SolidColorBrush x:Key="BrushBorderStrong" Color="{StaticResource ColorBorderStrong}"/>
+
+        <!-- Color Palette: Accent (Studio Cyan / Sky Pro) -->
+        <Color x:Key="ColorAccent">#0EA5E9</Color>
+        <Color x:Key="ColorAccentHover">#38BDF8</Color>
+        <Color x:Key="ColorAccentActive">#0284C7</Color>
+        <Color x:Key="ColorAccentMuted">#152D42</Color>
+        <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColorAccent}"/>
+        <SolidColorBrush x:Key="BrushAccentHover" Color="{StaticResource ColorAccentHover}"/>
+        <SolidColorBrush x:Key="BrushAccentActive" Color="{StaticResource ColorAccentActive}"/>
+        <SolidColorBrush x:Key="BrushAccentMuted" Color="{StaticResource ColorAccentMuted}"/>
+
+        <!-- Color Palette: Text & Foreground -->
+        <Color x:Key="ColorTextPrimary">#F4F4F6</Color>
+        <Color x:Key="ColorTextSecondary">#A1A1AE</Color>
+        <Color x:Key="ColorTextMuted">#717180</Color>
+        <SolidColorBrush x:Key="BrushTextPrimary" Color="{StaticResource ColorTextPrimary}"/>
+        <SolidColorBrush x:Key="BrushTextSecondary" Color="{StaticResource ColorTextSecondary}"/>
+        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColorTextMuted}"/>
+
+        <!-- Color Palette: Semantics -->
+        <Color x:Key="ColorStatusSuccess">#10B981</Color>
+        <Color x:Key="ColorStatusWarning">#F59E0B</Color>
+        <Color x:Key="ColorStatusDanger">#EF4444</Color>
+        <SolidColorBrush x:Key="BrushStatusSuccess" Color="{StaticResource ColorStatusSuccess}"/>
+        <SolidColorBrush x:Key="BrushStatusWarning" Color="{StaticResource ColorStatusWarning}"/>
+        <SolidColorBrush x:Key="BrushStatusDanger" Color="{StaticResource ColorStatusDanger}"/>
+
+        <!-- ============================================================ -->
+        <!-- VECTOR ICON GEOMETRIES (Path Data, 24x24 / Standard ViewBox) -->
+        <!-- ============================================================ -->
+        <StreamGeometry x:Key="IconFolder">M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z</StreamGeometry>
+        <StreamGeometry x:Key="IconCompare">M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm8-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h6V4zm2 0v16h6a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-6z</StreamGeometry>
+        <StreamGeometry x:Key="IconSplitWipe">M4 4h7v16H4V4zm9 0h7v16h-7V4z M11 2v20 M13 2v20</StreamGeometry>
+        <StreamGeometry x:Key="IconSave">M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z</StreamGeometry>
+        <StreamGeometry x:Key="IconWaveform">M4 9h2v6H4V9zm4-4h2v14H8V5zm4-2h2v18h-2V3zm4 4h2v14h-2V7zm4 4h2v6h-2v-6z</StreamGeometry>
+        <StreamGeometry x:Key="IconPlaylist">M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h12v2H3v-2z</StreamGeometry>
+        <StreamGeometry x:Key="IconInspector">M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z</StreamGeometry>
+        <StreamGeometry x:Key="IconFullscreen">M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z</StreamGeometry>
+        <StreamGeometry x:Key="IconPlay">M8 5v14l11-7z</StreamGeometry>
+        <StreamGeometry x:Key="IconPause">M6 19h4V5H6v14zm8-14v14h4V5h-4z</StreamGeometry>
+        <StreamGeometry x:Key="IconStepForward">M5 5v14l10-7-10-7zm12 0h2v14h-2V5z</StreamGeometry>
+        <StreamGeometry x:Key="IconStepBackward">M7 5h2v14H7V5zm4 7l10 7V5l-10 7z</StreamGeometry>
+        <StreamGeometry x:Key="IconSeekForward5">M4 5v14l8.5-7L4 5zm9 0v14l8.5-7L13 5z</StreamGeometry>
+        <StreamGeometry x:Key="IconSeekBackward5">M11 12L19.5 5v14L11 12zm-9 0L10.5 5v14L2 12z</StreamGeometry>
+        <StreamGeometry x:Key="IconSeekForward1">M6 6l8 6-8 6V6zm9 0h2v12h-2V6z</StreamGeometry>
+        <StreamGeometry x:Key="IconSeekBackward1">M7 6h2v12H7V6zm9 0v12l-8-6 8-6z</StreamGeometry>
+        <StreamGeometry x:Key="IconLoop">M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z</StreamGeometry>
+        <StreamGeometry x:Key="IconClear">M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z</StreamGeometry>
+        <StreamGeometry x:Key="IconVolume">M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z</StreamGeometry>
+        <StreamGeometry x:Key="IconMute">M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z</StreamGeometry>
+        <StreamGeometry x:Key="IconFlip">M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z</StreamGeometry>
+        <StreamGeometry x:Key="IconPlus">M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z</StreamGeometry>
+        <StreamGeometry x:Key="IconFilm">M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z</StreamGeometry>
+        <StreamGeometry x:Key="IconUpload">M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z</StreamGeometry>
+
+        <!-- ============================================================ -->
+        <!-- REUSABLE CONTROL STYLES                                      -->
+        <!-- ============================================================ -->
+
+        <!-- Toolbar Button Style -->
+        <Style x:Key="ToolbarBtn" TargetType="ButtonBase">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextSecondary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="9,5"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="{StaticResource BrushBgSurfaceHover}"/>
+                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="{StaticResource BrushBgControlPressed}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Control Button Style (Transport, Offset, Quick Actions) -->
+        <Style x:Key="ControlBtn" TargetType="ButtonBase">
+            <Setter Property="Background" Value="{StaticResource BrushBgControl}"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border x:Name="ctrlBorder" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ctrlBorder" Property="Background" Value="{StaticResource BrushBgControlHover}"/>
+                                <Setter TargetName="ctrlBorder" Property="BorderBrush" Value="{StaticResource BrushBorderStrong}"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ctrlBorder" Property="Background" Value="{StaticResource BrushBgControlPressed}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact Control Button Style (Height 24px for Stepper/Offset) -->
+        <Style x:Key="CompactControlBtn" TargetType="ButtonBase" BasedOn="{StaticResource ControlBtn}">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+
+        <!-- Primary Play/Pause Hero Button Style -->
+        <Style x:Key="PrimaryPlayBtn" TargetType="ButtonBase">
+            <Setter Property="Background" Value="{StaticResource BrushAccent}"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border x:Name="heroBorder" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="heroBorder" Property="Background" Value="{StaticResource BrushAccentHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="heroBorder" Property="Background" Value="{StaticResource BrushAccentActive}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Segmented Tab / Radio Button Style -->
+        <Style x:Key="SegmentedRadioBtn" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextSecondary}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="segBorder" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="segBorder" Property="Background" Value="{StaticResource BrushBgSurfaceHover}"/>
+                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="segBorder" Property="Background" Value="{StaticResource BrushAccentMuted}"/>
+                                <Setter Property="Foreground" Value="{StaticResource BrushAccentHover}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Application.Resources>
 </Application>

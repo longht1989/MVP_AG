@@ -6,10 +6,10 @@
         Title="LumiePlayer" 
         Icon="pack://application:,,,/favicon.png"
         Height="860" Width="1400"
-        MinHeight="600" MinWidth="900"
+        MinHeight="600" MinWidth="920"
         WindowStartupLocation="CenterScreen"
-        Background="#0F0F12"
-        Foreground="#F4F4F5"
+        Background="{StaticResource BrushBgBase}"
+        Foreground="{StaticResource BrushTextPrimary}"
         PreviewKeyDown="OnWindowPreviewKeyDown"
         PreviewKeyUp="OnWindowPreviewKeyUp">
 
@@ -20,7 +20,7 @@
         <!-- Custom Dark Slider Style -->
         <Style x:Key="ModernTimelineSlider" TargetType="Slider">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#38BDF8"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushAccent}"/>
             <Setter Property="Height" Value="24"/>
             <Setter Property="IsMoveToPointEnabled" Value="True"/>
             <Setter Property="Template">
@@ -32,7 +32,7 @@
                                     <RepeatButton Focusable="False" IsTabStop="False">
                                         <RepeatButton.Template>
                                             <ControlTemplate>
-                                                <Border Background="#38BDF8" Height="6" CornerRadius="3,0,0,3"/>
+                                                <Border Background="{StaticResource BrushAccent}" Height="6" CornerRadius="3,0,0,3"/>
                                             </ControlTemplate>
                                         </RepeatButton.Template>
                                     </RepeatButton>
@@ -41,7 +41,7 @@
                                     <RepeatButton Focusable="False" IsTabStop="False">
                                         <RepeatButton.Template>
                                             <ControlTemplate>
-                                                <Border Background="#27272A" Height="6" CornerRadius="0,3,3,0"/>
+                                                <Border Background="{StaticResource BrushBgControl}" Height="6" CornerRadius="0,3,3,0"/>
                                             </ControlTemplate>
                                         </RepeatButton.Template>
                                     </RepeatButton>
@@ -50,7 +50,7 @@
                                     <Thumb Focusable="False">
                                         <Thumb.Template>
                                             <ControlTemplate>
-                                                <Ellipse Width="16" Height="16" Fill="#FFFFFF" Stroke="#38BDF8" StrokeThickness="2" Cursor="Hand"/>
+                                                <Ellipse Width="16" Height="16" Fill="#FFFFFF" Stroke="{StaticResource BrushAccent}" StrokeThickness="2" Cursor="Hand"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -60,56 +60,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="ToolbarBtn" TargetType="ButtonBase">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#D4D4D8"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ButtonBase">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#27272A"/>
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="ControlBtn" TargetType="ButtonBase">
-            <Setter Property="Background" Value="#1E1E24"/>
-            <Setter Property="Foreground" Value="#F4F4F5"/>
-            <Setter Property="BorderBrush" Value="#2E2E38"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ButtonBase">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2E2E38"/>
-                    <Setter Property="BorderBrush" Value="#3F3F4E"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
     </Window.Resources>
 
@@ -126,7 +76,7 @@
         </Grid.RowDefinitions>
 
         <!-- TOP TOOLBAR -->
-        <Border Grid.Row="0" Background="#141418" BorderBrush="#27272A" BorderThickness="0,0,0,1" Padding="12,6">
+        <Border Grid.Row="0" Background="{StaticResource BrushBgElevated}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,0,0,1" Padding="14,6">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -138,33 +88,51 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
                         <Image Source="pack://application:,,,/favicon.png" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="LUMIE PLAYER" FontWeight="Black" FontSize="14" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                        <TextBlock Text="LUMIE PLAYER" FontWeight="Black" FontSize="13" Foreground="{StaticResource BrushAccent}" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <Button Content="📂 Open Video A (Ctrl+O)" Style="{StaticResource ToolbarBtn}" Command="{Binding OpenFileACommand}"/>
-                    <Button Content="📂 Open Video B (Ctrl+Shift+O)" Style="{StaticResource ToolbarBtn}" Command="{Binding OpenFileBCommand}"/>
+                    <!-- Open Video A -->
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding OpenFileACommand}" ToolTip="Open Video A (Ctrl+O)" Margin="0,0,4,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconFolder}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,6,0"/>
+                            <TextBlock Text="Video A" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                    <Border Width="1" Height="18" Background="#27272A" Margin="8,0"/>
+                    <!-- Open Video B -->
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding OpenFileBCommand}" ToolTip="Open Video B (Ctrl+Shift+O)" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconFolder}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,6,0"/>
+                            <TextBlock Text="Video B" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Height="18" Background="{StaticResource BrushBorderSubtle}" Margin="4,0,8,0"/>
 
                     <!-- Compare Mode Switch -->
-                    <ToggleButton IsChecked="{Binding IsCompareMode, Mode=TwoWay}" Cursor="Hand" VerticalAlignment="Center" Margin="4,0" Padding="10,5">
+                    <ToggleButton IsChecked="{Binding IsCompareMode, Mode=TwoWay}" Cursor="Hand" VerticalAlignment="Center" Margin="0,0,6,0">
                         <ToggleButton.Style>
                             <Style TargetType="ToggleButton">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ToggleButton">
-                                            <Border x:Name="tbBorder" Background="#1E1E24" BorderBrush="#2E2E38" BorderThickness="1" CornerRadius="4" Padding="10,5">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="⚡ Compare: " Foreground="#A1A1AA" FontSize="12"/>
-                                                    <TextBlock x:Name="tbStatus" Text="OFF" Foreground="#EF4444" FontWeight="Bold" FontSize="12"/>
+                                            <Border x:Name="tbBorder" Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="8,4" Height="30">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Path Data="{StaticResource IconCompare}" Width="13" Height="13" Fill="{StaticResource BrushTextSecondary}" Stretch="Uniform" Margin="0,0,6,0" x:Name="tbIcon"/>
+                                                    <TextBlock Text="Compare: " Foreground="{StaticResource BrushTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock x:Name="tbStatus" Text="OFF" Foreground="{StaticResource BrushTextMuted}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="tbBorder" Property="Background" Value="#1E3A8A"/>
-                                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="#3B82F6"/>
+                                                    <Setter TargetName="tbBorder" Property="Background" Value="{StaticResource BrushAccentMuted}"/>
+                                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="{StaticResource BrushAccent}"/>
+                                                    <Setter TargetName="tbIcon" Property="Fill" Value="{StaticResource BrushAccent}"/>
                                                     <Setter TargetName="tbStatus" Property="Text" Value="ON"/>
-                                                    <Setter TargetName="tbStatus" Property="Foreground" Value="#38BDF8"/>
+                                                    <Setter TargetName="tbStatus" Property="Foreground" Value="{StaticResource BrushAccent}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="{StaticResource BrushBorderStrong}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -175,53 +143,81 @@
                     </ToggleButton>
 
                     <!-- Compare Mode Sub-Layout (Side by Side vs Split Wipe) -->
-                    <Border Background="#18181E" BorderBrush="#27272A" BorderThickness="1" CornerRadius="4" Padding="2" Margin="4,0"
-                            Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton Content="Side by Side" IsChecked="{Binding IsSideBySide, Mode=OneWay}"
-                                         Command="{Binding SetCompareLayoutCommand}" CommandParameter="SideBySide"
-                                         Foreground="#F4F4F5" FontSize="11" Margin="6,2" VerticalAlignment="Center"/>
-                            <RadioButton Content="Split Wipe" IsChecked="{Binding IsOverlay, Mode=OneWay}"
-                                         Command="{Binding SetCompareLayoutCommand}" CommandParameter="Overlay"
-                                         Foreground="#38BDF8" FontSize="11" Margin="6,2" VerticalAlignment="Center"/>
+                    <Border Background="{StaticResource BrushBgBase}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,0,8,0"
+                            Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}" Height="30">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="Side by Side"
+                                         IsChecked="{Binding IsSideBySide, Mode=OneWay}"
+                                         Command="{Binding SetCompareLayoutCommand}" CommandParameter="SideBySide" Margin="2,0"/>
+                            <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="Split Wipe"
+                                         IsChecked="{Binding IsOverlay, Mode=OneWay}"
+                                         Command="{Binding SetCompareLayoutCommand}" CommandParameter="Overlay" Margin="2,0"/>
                         </StackPanel>
                     </Border>
 
                     <!-- Split Wipe Controls in Top Bar -->
-                    <Border Background="#1E1E24" CornerRadius="4" Padding="8,3" Margin="4,0"
+                    <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="0,0,8,0" Height="30"
                             Visibility="{Binding IsOverlay, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Wipe (A|B): " Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding OverlayOpacity, StringFormat='{}{0:P0}'}" Foreground="#38BDF8" FontWeight="Bold" FontSize="11" Width="36" VerticalAlignment="Center"/>
+                            <TextBlock Text="Wipe: " Foreground="{StaticResource BrushTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding OverlayOpacity, StringFormat='{}{0:P0}'}" Foreground="{StaticResource BrushAccent}" FontWeight="Bold" FontSize="11" Width="36" VerticalAlignment="Center"/>
                             <Slider Width="70" Minimum="0.0" Maximum="1.0" Value="{Binding OverlayOpacity, Mode=TwoWay}" VerticalAlignment="Center" Margin="4,0"/>
-                            <Button Content="100% A" Style="{StaticResource ControlBtn}" Padding="4,1" FontSize="10" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="0.0" Margin="2,0" ToolTip="Show 100% Video A"/>
-                            <Button Content="50% Split" Style="{StaticResource ControlBtn}" Padding="4,1" FontSize="10" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="0.5" Margin="2,0" ToolTip="50% Video A (Left) / 50% Video B (Right)"/>
-                            <Button Content="100% B" Style="{StaticResource ControlBtn}" Padding="4,1" FontSize="10" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="1.0" Margin="2,0" ToolTip="Show 100% Video B"/>
-                            <Button Content="Flip [Tab]" Style="{StaticResource ControlBtn}" Padding="4,1" FontSize="10" ToolTip="Hold to see Video A, release to see Video B" 
-                                    PreviewMouseDown="OnFlipMouseDown" PreviewMouseUp="OnFlipMouseUp" Margin="4,0,0,0"/>
+                            <Button Content="100% A" Style="{StaticResource CompactControlBtn}" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="0.0" Margin="2,0" ToolTip="Show 100% Video A"/>
+                            <Button Content="50%" Style="{StaticResource CompactControlBtn}" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="0.5" Margin="2,0" ToolTip="50% Split Video A &amp; B"/>
+                            <Button Content="100% B" Style="{StaticResource CompactControlBtn}" Command="{Binding SetOverlayOpacityCommand}" CommandParameter="1.0" Margin="2,0" ToolTip="Show 100% Video B"/>
+                            <Button Style="{StaticResource CompactControlBtn}" ToolTip="Hold to see Video A, release to see Video B (Tab)" 
+                                    PreviewMouseDown="OnFlipMouseDown" PreviewMouseUp="OnFlipMouseUp" Margin="4,0,0,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconFlip}" Width="12" Height="12" Fill="{StaticResource BrushAccent}" Stretch="Uniform" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Flip [Tab]" FontSize="10" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Border>
 
-                    <Button Content="💾 Save Session" Style="{StaticResource ToolbarBtn}" Command="{Binding SaveCompareSessionCommand}" ToolTip="Save Compare Session (Files, Offset, Time)"/>
-                    <Button Content="📂 Load Session" Style="{StaticResource ToolbarBtn}" Command="{Binding LoadCompareSessionCommand}" ToolTip="Load Saved Compare Session"/>
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding SaveCompareSessionCommand}" ToolTip="Save Compare Session (Files, Offset, Time)" Margin="2,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconSave}" Width="13" Height="13" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Save Session" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding LoadCompareSessionCommand}" ToolTip="Load Saved Compare Session" Margin="2,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconFolder}" Width="13" Height="13" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Load Session" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- Right Menu Items -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ToggleButton IsChecked="{Binding IsWaveformVisible, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Margin="4,0" ToolTip="Toggle Audio Waveform (W)">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="〰 Waveform" VerticalAlignment="Center"/>
+                    <ToggleButton IsChecked="{Binding IsWaveformVisible, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Margin="2,0" ToolTip="Toggle Audio Waveform (W)">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconWaveform}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Waveform" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ToggleButton>
 
-                    <ToggleButton IsChecked="{Binding IsPlaylistVisible, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Margin="4,0" ToolTip="Toggle Playlist Panel">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📑 Playlist" VerticalAlignment="Center"/>
+                    <ToggleButton IsChecked="{Binding IsPlaylistVisible, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Margin="2,0" ToolTip="Toggle Playlist Panel">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconPlaylist}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Playlist" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ToggleButton>
 
-                    <Button Content="ℹ Inspector" Style="{StaticResource ToolbarBtn}" Click="OnShowMetadataClick" ToolTip="View Detailed Media Metadata"/>
-                    <Button Content="⛶ Fullscreen (F)" Style="{StaticResource ToolbarBtn}" Command="{Binding ToggleFullscreenCommand}"/>
+                    <Button Style="{StaticResource ToolbarBtn}" Click="OnShowMetadataClick" ToolTip="View Detailed Media Metadata" Margin="2,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconInspector}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Inspector" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding ToggleFullscreenCommand}" ToolTip="Toggle Fullscreen (F)" Margin="2,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconFullscreen}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Fullscreen" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -238,7 +234,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- PLAYLIST PANEL -->
-            <Border Grid.Column="0" Background="#131317" BorderBrush="#27272A" BorderThickness="0,0,1,0"
+            <Border Grid.Column="0" Background="{StaticResource BrushBgBase}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,0,1,0"
                     Visibility="{Binding IsPlaylistVisible, Converter={StaticResource BoolToVis}}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -248,42 +244,60 @@
                     </Grid.RowDefinitions>
 
                     <!-- Playlist Header -->
-                    <Border Grid.Row="0" Background="#18181E" Padding="10,8" BorderBrush="#27272A" BorderThickness="0,0,0,1">
+                    <Border Grid.Row="0" Background="{StaticResource BrushBgSurface}" Padding="12,8" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,0,0,1">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Playlist" FontWeight="Bold" FontSize="13" Foreground="#F4F4F5"/>
-                                <TextBlock Text="{Binding Playlist.Count, StringFormat=' ({0})'}" Foreground="#71717A" FontSize="13"/>
+                                <Path Data="{StaticResource IconPlaylist}" Width="14" Height="14" Fill="{StaticResource BrushAccent}" Stretch="Uniform" Margin="0,0,6,0"/>
+                                <TextBlock Text="Playlist" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource BrushTextPrimary}"/>
+                                <Border Background="{StaticResource BrushBgControl}" CornerRadius="10" Padding="6,1" Margin="6,0,0,0">
+                                    <TextBlock Text="{Binding Playlist.Count}" Foreground="{StaticResource BrushTextSecondary}" FontSize="10" FontWeight="SemiBold"/>
+                                </Border>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button Content="+" ToolTip="Add files" Width="26" Height="24" Style="{StaticResource ControlBtn}" Command="{Binding AddFilesCommand}" Margin="0,0,4,0"/>
-                                <Button Content="✕" ToolTip="Clear playlist" Width="26" Height="24" Style="{StaticResource ControlBtn}" Command="{Binding ClearPlaylistCommand}"/>
+                                <Button ToolTip="Add video files to playlist" Width="26" Height="24" Style="{StaticResource ControlBtn}" Command="{Binding AddFilesCommand}" Margin="0,0,4,0" Padding="0">
+                                    <Path Data="{StaticResource IconPlus}" Width="12" Height="12" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform"/>
+                                </Button>
+                                <Button ToolTip="Clear entire playlist" Width="26" Height="24" Style="{StaticResource ControlBtn}" Command="{Binding ClearPlaylistCommand}" Padding="0">
+                                    <Path Data="{StaticResource IconClear}" Width="11" Height="11" Fill="{StaticResource BrushStatusDanger}" Stretch="Uniform"/>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Border>
 
                     <!-- Playlist ListBox with Internal Drag Support -->
                     <ListBox Grid.Row="1" ItemsSource="{Binding Playlist}" SelectedItem="{Binding SelectedPlaylistItem, Mode=TwoWay}"
-                             Background="Transparent" BorderThickness="0" Foreground="#E4E4E7"
+                             Background="Transparent" BorderThickness="0" Foreground="{StaticResource BrushTextPrimary}"
                              MouseDoubleClick="OnPlaylistDoubleClick" AllowDrop="True" Drop="OnPlaylistDrop" DragOver="OnPlaylistDragOver"
                              PreviewMouseLeftButtonDown="OnPlaylistPreviewMouseDown" PreviewMouseMove="OnPlaylistPreviewMouseMove">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="8,6" CornerRadius="4" Margin="2,1" Cursor="Hand" Background="Transparent">
+                                <Border Padding="8,6" CornerRadius="4" Margin="2,1" Cursor="Hand" Background="Transparent" x:Name="itemBorder">
                                     <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <TextBlock Text="{Binding FileName}" FontWeight="Medium" FontSize="12" Foreground="#F4F4F5" TextTrimming="CharacterEllipsis"/>
-                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,3,0,0">
-                                            <TextBlock Text="{Binding Resolution}" FontSize="10" Foreground="#38BDF8" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding FpsText}" FontSize="10" Foreground="#A1A1AA" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding DurationText}" FontSize="10" Foreground="#71717A"/>
-                                        </StackPanel>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Path Grid.Column="0" Data="{StaticResource IconFilm}" Width="14" Height="14" Fill="{StaticResource BrushTextMuted}" Stretch="Uniform" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                                        <Grid Grid.Column="1">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding FileName}" FontWeight="Medium" FontSize="12" Foreground="{StaticResource BrushTextPrimary}" TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
+                                                <Border Background="{StaticResource BrushBgControl}" CornerRadius="2" Padding="4,1" Margin="0,0,6,0">
+                                                    <TextBlock Text="{Binding Resolution}" FontSize="9" Foreground="{StaticResource BrushAccent}" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{StaticResource BrushBgControl}" CornerRadius="2" Padding="4,1" Margin="0,0,6,0">
+                                                    <TextBlock Text="{Binding FpsText}" FontSize="9" Foreground="{StaticResource BrushTextSecondary}"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding DurationText}" FontSize="10" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -291,21 +305,31 @@
                     </ListBox>
 
                     <!-- Playlist Footer -->
-                    <Border Grid.Row="2" Background="#18181E" Padding="8,6" BorderBrush="#27272A" BorderThickness="0,1,0,0">
+                    <Border Grid.Row="2" Background="{StaticResource BrushBgSurface}" Padding="8,6" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,1,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Save..." Style="{StaticResource ControlBtn}" Command="{Binding SavePlaylistCommand}" Margin="0,0,4,0"/>
-                            <Button Grid.Column="1" Content="Load..." Style="{StaticResource ControlBtn}" Command="{Binding LoadPlaylistCommand}" Margin="4,0,0,0"/>
+                            <Button Grid.Column="0" Style="{StaticResource ControlBtn}" Command="{Binding SavePlaylistCommand}" Margin="0,0,4,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconSave}" Width="12" Height="12" Fill="{StaticResource BrushTextSecondary}" Stretch="Uniform" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Save..." VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Style="{StaticResource ControlBtn}" Command="{Binding LoadPlaylistCommand}" Margin="4,0,0,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconFolder}" Width="12" Height="12" Fill="{StaticResource BrushTextSecondary}" Stretch="Uniform" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Load..." VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
 
             <!-- GridSplitter between Playlist and Videos -->
-            <GridSplitter Grid.Column="1" Width="4" Background="#1E1E24" ResizeBehavior="PreviousAndNext"
+            <GridSplitter Grid.Column="1" Width="4" Background="{StaticResource BrushBgSurface}" ResizeBehavior="PreviousAndNext"
                           Visibility="{Binding IsPlaylistVisible, Converter={StaticResource BoolToVis}}"/>
 
             <!-- VIDEO RENDERING AREA: Dynamic Single / Compare (Side-by-Side & Overlay Stack) -->
@@ -323,7 +347,7 @@
                 <views:VideoPlayerControl Grid.Column="0" x:Name="PlayerAControl" RoleName="VIDEO A (REFERENCE)"/>
 
                 <!-- Compare Splitter (Side-by-Side only) -->
-                <GridSplitter Grid.Column="1" Width="4" Background="#27272A" ResizeBehavior="PreviousAndNext"
+                <GridSplitter Grid.Column="1" Width="4" Background="{StaticResource BrushBorderSubtle}" ResizeBehavior="PreviousAndNext"
                               x:Name="CompareSplitter" Visibility="Collapsed"/>
 
                 <!-- Video B Player (Dynamically positioned in Column 2 for Side-by-Side or Column 0 for Overlay) -->
@@ -333,10 +357,10 @@
         </Grid>
 
         <!-- BOTTOM CONTROLS & TIMELINE -->
-        <Border Grid.Row="2" Background="#141418" BorderBrush="#27272A" BorderThickness="0,1,0,0" Padding="16,8,16,12">
+        <Border Grid.Row="2" Background="{StaticResource BrushBgElevated}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,1,0,0" Padding="16,8,16,10">
             <StackPanel>
                 <!-- WAVEFORM AUDIO BAR (TOGGLEABLE) -->
-                <Border Margin="0,0,0,6" CornerRadius="4" BorderBrush="#27272A" BorderThickness="1"
+                <Border Margin="0,0,0,6" CornerRadius="4" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1"
                         Visibility="{Binding IsWaveformVisible, Converter={StaticResource BoolToVis}}">
                     <views:WaveformControl x:Name="MainWaveform"
                                            WaveformData="{Binding WaveformData}"
@@ -359,8 +383,8 @@
                     <Button Grid.Column="0" ToolTip="Click to Jump to Timecode/Frame" Click="OnJumpTimecodeClick"
                             Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4,2" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding TimecodeA}" FontFamily="Consolas, monospace" FontSize="18" FontWeight="Bold" Foreground="#38BDF8"/>
-                            <TextBlock Text="{Binding FrameTextA, StringFormat='  [{0}]'}" FontFamily="Consolas, monospace" FontSize="12" Foreground="#A1A1AA" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding TimecodeA}" FontFamily="Consolas, monospace" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}"/>
+                            <TextBlock Text="{Binding FrameTextA, StringFormat='  [{0}]'}" FontFamily="Consolas, monospace" FontSize="12" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -378,17 +402,17 @@
                     <!-- Right Info: Compare Timecode B & Total Duration -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Video B Timecode in Compare Mode -->
-                        <Border Background="#1E1E24" Padding="6,2" CornerRadius="4" Margin="0,0,10,0"
+                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" Padding="6,2" CornerRadius="4" Margin="0,0,10,0"
                                 Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="B: " Foreground="#EAB308" FontWeight="Bold" FontSize="11"/>
+                                <TextBlock Text="B: " Foreground="{StaticResource BrushStatusWarning}" FontWeight="Bold" FontSize="11"/>
                                 <TextBlock Text="{Binding TimecodeB}" FontFamily="Consolas, monospace" FontSize="13" Foreground="#FDE047"/>
-                                <TextBlock Text="{Binding FrameTextB, StringFormat='  ({0})'}" FontFamily="Consolas, monospace" FontSize="11" Foreground="#A1A1AA"/>
+                                <TextBlock Text="{Binding FrameTextB, StringFormat='  ({0})'}" FontFamily="Consolas, monospace" FontSize="11" Foreground="{StaticResource BrushTextMuted}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Total Duration -->
-                        <TextBlock Text="{Binding Duration, StringFormat='{}{0:F1}s'}" FontFamily="Consolas, monospace" FontSize="14" Foreground="#71717A" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Duration, StringFormat='{}{0:F1}s'}" FontFamily="Consolas, monospace" FontSize="14" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
 
@@ -405,52 +429,94 @@
 
                     <!-- Left: A-B Loop Controls -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="[ Loop A" Style="{StaticResource ControlBtn}" Command="{Binding SetLoopACommand}" ToolTip="Set Loop Start (A)" Margin="0,0,4,0"/>
-                        <Button Content="Loop B ]" Style="{StaticResource ControlBtn}" Command="{Binding SetLoopBCommand}" ToolTip="Set Loop End (B)" Margin="0,0,4,0"/>
-                        <Button Content="✕ Clear" Style="{StaticResource ControlBtn}" Command="{Binding ClearLoopCommand}" ToolTip="Clear A-B Loop" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding LoopSummaryText}" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopACommand}" ToolTip="Set Loop Start (A) [key: [ ]">
+                                    <TextBlock Text="[ Loop A" FontSize="11" FontWeight="SemiBold"/>
+                                </Button>
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopBCommand}" ToolTip="Set Loop End (B) [key: ] ]">
+                                    <TextBlock Text="Loop B ]" FontSize="11" FontWeight="SemiBold"/>
+                                </Button>
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="5,2" Command="{Binding ClearLoopCommand}" ToolTip="Clear A-B Loop [key: \]">
+                                    <Path Data="{StaticResource IconClear}" Width="10" Height="10" Fill="{StaticResource BrushStatusDanger}" Stretch="Uniform"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding LoopSummaryText}" Foreground="{StaticResource BrushTextMuted}" FontSize="11" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Center: Prev Frame, Seek, Play/Pause, Next Frame -->
+                    <!-- Center: Playback & Frame Stepping -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Button Content="⏪ -5s" Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="-5" ToolTip="Rewind 5s" Margin="2,0"/>
-                        <Button Content="◀ -1s" Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="-1" ToolTip="Rewind 1s (Shift+Left)" Margin="2,0"/>
-                        <Button Content="⏮ Frame" Style="{StaticResource ControlBtn}" Command="{Binding FrameStepBackwardCommand}" ToolTip="Previous Frame (Left Arrow)" Margin="4,0" FontWeight="SemiBold"/>
-
-                        <!-- Big Play/Pause Button -->
-                        <Button Command="{Binding PlayPauseCommand}" Width="60" Height="36" Margin="6,0" Cursor="Hand" ToolTip="Play / Pause (Space)">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="#2563EB"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="18">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#1D4ED8"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                            <TextBlock Text="{Binding PlayPauseIcon}" FontWeight="Bold" FontSize="16" Foreground="#FFFFFF"/>
+                        <!-- Rewind -5s -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="-5" ToolTip="Rewind 5s" Margin="2,0" Padding="7,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconSeekBackward5}" Width="12" Height="12" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform" Margin="0,0,3,0"/>
+                                <TextBlock Text="-5s" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
 
-                        <Button Content="Frame ⏭" Style="{StaticResource ControlBtn}" Command="{Binding FrameStepForwardCommand}" ToolTip="Next Frame (Right Arrow)" Margin="4,0" FontWeight="SemiBold"/>
-                        <Button Content="+1s ▶" Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="1" ToolTip="Forward 1s (Shift+Right)" Margin="2,0"/>
-                        <Button Content="+5s ⏩" Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="5" ToolTip="Forward 5s" Margin="2,0"/>
+                        <!-- Rewind -1s -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="-1" ToolTip="Rewind 1s (Shift+Left)" Margin="2,0" Padding="6,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconSeekBackward1}" Width="11" Height="11" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform" Margin="0,0,2,0"/>
+                                <TextBlock Text="-1s" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Frame Backward -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding FrameStepBackwardCommand}" ToolTip="Previous Frame (Left Arrow)" Margin="3,0" Padding="7,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconStepBackward}" Width="12" Height="12" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform" Margin="0,0,4,0"/>
+                                <TextBlock Text="Frame" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Primary Play/Pause Button with dynamic Vector icon! -->
+                        <Button Command="{Binding PlayPauseCommand}" Style="{StaticResource PrimaryPlayBtn}" Margin="6,0" ToolTip="Play / Pause (Space)">
+                            <Path Width="16" Height="16" Fill="#FFFFFF" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Data" Value="{StaticResource IconPlay}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="Data" Value="{StaticResource IconPause}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                        </Button>
+
+                        <!-- Frame Forward -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding FrameStepForwardCommand}" ToolTip="Next Frame (Right Arrow)" Margin="3,0" Padding="7,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Frame" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <Path Data="{StaticResource IconStepForward}" Width="12" Height="12" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Forward +1s -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="1" ToolTip="Forward 1s (Shift+Right)" Margin="2,0" Padding="6,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="+1s" FontSize="11" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                                <Path Data="{StaticResource IconSeekForward1}" Width="11" Height="11" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Forward +5s -->
+                        <Button Style="{StaticResource ControlBtn}" Command="{Binding SeekRelativeCommand}" CommandParameter="5" ToolTip="Forward 5s" Margin="2,0" Padding="7,4">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="+5s" FontSize="11" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Path Data="{StaticResource IconSeekForward5}" Width="12" Height="12" Fill="{StaticResource BrushTextPrimary}" Stretch="Uniform"/>
+                            </StackPanel>
+                        </Button>
 
                         <!-- Speed Selector -->
-                        <StackPanel Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Speed:" Foreground="#71717A" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                            <ComboBox SelectedValue="{Binding PlaybackSpeed, Mode=TwoWay}" SelectedValuePath="Tag" Width="70"
-                                      Background="#18181E" Foreground="#F4F4F5" BorderBrush="#27272A">
+                        <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Speed:" Foreground="{StaticResource BrushTextMuted}" FontSize="11" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox SelectedValue="{Binding PlaybackSpeed, Mode=TwoWay}" SelectedValuePath="Tag" Width="68" Height="28"
+                                      Background="{StaticResource BrushBgControl}" Foreground="{StaticResource BrushTextPrimary}" BorderBrush="{StaticResource BrushBorderSubtle}"
+                                      VerticalContentAlignment="Center">
                                 <ComboBoxItem Content="0.25x" Tag="0.25"/>
                                 <ComboBoxItem Content="0.5x" Tag="0.5"/>
                                 <ComboBoxItem Content="0.75x" Tag="0.75"/>
@@ -464,56 +530,71 @@
 
                     <!-- Right: Compare Offset & Audio & Volume -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Compare Offset Controls (Visible only in compare mode) -->
-                        <Border Background="#1E1E24" CornerRadius="4" Padding="8,4" Margin="0,0,12,0"
+                        <!-- Compare Offset Controls -->
+                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,10,0" Height="30"
                                 Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Offset B: " Foreground="#EAB308" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding OffsetSeconds, StringFormat='{}{0:+0.000;-0.000;0.000}s'}" FontFamily="Consolas" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Offset B: " Foreground="{StaticResource BrushStatusWarning}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding OffsetSeconds, StringFormat='{}{0:+0.000;-0.000;0.000}s'}" FontFamily="Consolas, monospace" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,0,5,0"/>
 
-                                <Button Content="-0.1s" Style="{StaticResource ControlBtn}" Padding="4,2" Command="{Binding AdjustOffsetCommand}" CommandParameter="-0.1" Margin="1,0"/>
-                                <Button Content="-0.01s" Style="{StaticResource ControlBtn}" Padding="4,2" Command="{Binding AdjustOffsetCommand}" CommandParameter="-0.01" Margin="1,0"/>
-                                <Button Content="+0.01s" Style="{StaticResource ControlBtn}" Padding="4,2" Command="{Binding AdjustOffsetCommand}" CommandParameter="0.01" Margin="1,0"/>
-                                <Button Content="+0.1s" Style="{StaticResource ControlBtn}" Padding="4,2" Command="{Binding AdjustOffsetCommand}" CommandParameter="0.1" Margin="1,0"/>
-                                <Button Content="0" Style="{StaticResource ControlBtn}" Padding="4,2" Command="{Binding ResetOffsetCommand}" ToolTip="Reset offset to 0" Margin="1,0"/>
+                                <Button Content="-0.1s" Style="{StaticResource CompactControlBtn}" Command="{Binding AdjustOffsetCommand}" CommandParameter="-0.1" Margin="1,0"/>
+                                <Button Content="-0.01s" Style="{StaticResource CompactControlBtn}" Command="{Binding AdjustOffsetCommand}" CommandParameter="-0.01" Margin="1,0"/>
+                                <Button Content="+0.01s" Style="{StaticResource CompactControlBtn}" Command="{Binding AdjustOffsetCommand}" CommandParameter="0.01" Margin="1,0"/>
+                                <Button Content="+0.1s" Style="{StaticResource CompactControlBtn}" Command="{Binding AdjustOffsetCommand}" CommandParameter="0.1" Margin="1,0"/>
+                                <Button Content="0" Style="{StaticResource CompactControlBtn}" Command="{Binding ResetOffsetCommand}" ToolTip="Reset offset to 0" Margin="1,0"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Audio Source Selection in Compare Mode -->
-                        <Border Background="#1E1E24" CornerRadius="4" Padding="6,4" Margin="0,0,12,0"
+                        <!-- Audio Source Segmented Group -->
+                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,0,10,0" Height="30"
                                 Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Audio: " Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
-                                <RadioButton Content="A" x:Name="RbAudioA" IsChecked="True"
-                                             GroupName="AudioSrc" Click="OnAudioSourceAClick" Foreground="#38BDF8" Margin="4,0" VerticalAlignment="Center"/>
-                                <RadioButton Content="B" x:Name="RbAudioB" GroupName="AudioSrc" Click="OnAudioSourceBClick" Foreground="#FDE047" Margin="4,0" VerticalAlignment="Center"/>
-                                <RadioButton Content="Mute" x:Name="RbAudioMute" GroupName="AudioSrc" Click="OnAudioSourceMuteClick" Foreground="#EF4444" Margin="4,0" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Audio:" Foreground="{StaticResource BrushTextMuted}" FontSize="10" Margin="4,0,2,0" VerticalAlignment="Center"/>
+                                <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="A" x:Name="RbAudioA" IsChecked="True"
+                                             GroupName="AudioSrc" Click="OnAudioSourceAClick" Margin="1,0"/>
+                                <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="B" x:Name="RbAudioB"
+                                             GroupName="AudioSrc" Click="OnAudioSourceBClick" Margin="1,0"/>
+                                <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="Mute" x:Name="RbAudioMute"
+                                             GroupName="AudioSrc" Click="OnAudioSourceMuteClick" Margin="1,0"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Volume Slider -->
-                        <ToggleButton IsChecked="{Binding IsMuted, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Padding="4" ToolTip="Toggle Mute (M)">
-                            <TextBlock Text="{Binding MuteIcon}" FontSize="13"/>
+                        <!-- Volume Mute Button with dynamic vector icon! -->
+                        <ToggleButton IsChecked="{Binding IsMuted, Mode=TwoWay}" Style="{StaticResource ToolbarBtn}" Width="28" Height="28" Padding="0" Margin="0,0,2,0" ToolTip="Toggle Mute (M)">
+                            <Path Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Data" Value="{StaticResource IconVolume}"/>
+                                        <Setter Property="Fill" Value="{StaticResource BrushTextSecondary}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                <Setter Property="Data" Value="{StaticResource IconMute}"/>
+                                                <Setter Property="Fill" Value="{StaticResource BrushStatusDanger}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
                         </ToggleButton>
-                        <Slider Width="70" Minimum="0" Maximum="100" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center" Margin="4,0,8,0"/>
+                        <Slider Width="70" Minimum="0" Maximum="100" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center" Margin="2,0,4,0"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </Border>
 
         <!-- STATUS BAR -->
-        <Border Grid.Row="3" Background="#0C0C0E" BorderBrush="#1C1C20" BorderThickness="0,1,0,0" Padding="12,4">
+        <Border Grid.Row="3" Background="{StaticResource BrushBgBase}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="0,1,0,0" Padding="14,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="#71717A" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [Shift+←/→] ±1s | [Tab] Flip Overlay | [F] Fullscreen | [W] Waveform" 
-                               FontSize="11" Foreground="#52525B"/>
+                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [Shift+←/→] ±1s | [Tab] Flip Wipe | [F] Fullscreen | [W] Waveform" 
+                               FontSize="11" Foreground="{StaticResource BrushTextMuted}"/>
                 </StackPanel>
             </Grid>
         </Border>
