@@ -139,4 +139,41 @@ Theo đánh giá tại `update_ui.md`, phiên bản v1.6 nâng cấp toàn bộ 
 - [x] **Kiểm thử tự động:** 29/29 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã publish phiên bản mới nhất ra `bin\publish\LumiePlayer.exe`.
 
+---
+
+## 8. Kế Hoạch Khắc Phục Màu Sắc Speed ComboBox (v1.6.1)
+
+### Nguyên Nhân Sự Cố:
+- Mặc định trong WPF, `ComboBox` khi mở danh sách xổ xuống (`Popup`) sử dụng template hệ thống của Windows Aero2 (`SystemColors.WindowBrush` = `#FFFFFF`, màu trắng tinh khiết).
+- Khi người dùng nhấn vào chọn tốc độ phát (Speed), danh sách xổ xuống hiện ra một dải hộp chữ nhật màu trắng sáng chói mắt, chữ mờ khó nhìn và phá vỡ toàn bộ giao diện Studio Dark.
+
+### Giải Pháp Kỹ Thuật:
+1. **Định nghĩa Custom Dark ComboBox Style (`ModernStudioComboBox`):**
+   - **Thân nút bấm (`ToggleButton`):** Nền `{StaticResource BrushBgControl}` (`#1F1F27`), viền `{StaticResource BrushBorderSubtle}`, góc bo 4px, icon mũi tên chevron vector mảnh nhỏ màu `{StaticResource BrushTextSecondary}`.
+   - **Khung danh sách xổ xuống (`Popup` / `Border`):**
+     - Nền `{StaticResource BrushBgSurface}` (`#18181D`), viền sắc nét `{StaticResource BrushBorderStrong}` (`#3A3A4A`), góc bo 4px, đổ bóng nhẹ.
+   - **Các mục chọn (`ComboBoxItem`):**
+     - Nền trong suốt, chữ `{StaticResource BrushTextPrimary}` (`#F4F4F6`), font size 11px, padding 8x5px.
+     - Hover: Nền sáng nhẹ `{StaticResource BrushBgSurfaceHover}` (`#22222A`), chữ trắng.
+     - Selected: Nền nhấn mờ `{StaticResource BrushAccentMuted}` (`#152D42`), chữ xanh `{StaticResource BrushAccentHover}` (`#38BDF8`), in đậm.
+2. **Khai báo trong `App.xaml` & áp dụng cho Speed Selector:**
+   - Đặt style tái sử dụng trong `App.xaml` để toàn bộ ứng dụng dùng chung chuẩn dark theme cho ComboBox.
+   - Cập nhật `MainWindow.xaml` gán style cho Speed ComboBox.
+3. **Kiểm thử & Đóng gói:**
+   - Build và test toàn bộ test suite.
+   - Đóng gói ra `bin/publish/`.
+
+---
+
+## 9. Kết Quả Triển Khai & Nghiệm Thu (v1.6.1)
+- [x] **Khắc phục triệt để lỗi màu trắng của Speed ComboBox Popup:**
+  - `ModernStudioComboBox` đã tùy biến toàn diện cả `ToggleButton` và `Popup` / `ScrollViewer`:
+    + Thân ComboBox mang nền tối Studio `#1F1F27`, viền `#25252F`, icon mũi tên vector chevron sắc nét.
+    + Khung popup xổ xuống mang nền xám đen Studio `#18181D` (Surface), viền `#3A3A4A`, triệt tiêu hoàn toàn khung trắng Windows Aero2.
+  - `ModernStudioComboBoxItem` hiển thị chữ trắng rõ nét, hover chuyển nền xám sáng `#22222A`, item đang chọn có nền xanh mờ `#152D42` và chữ cyan `#38BDF8` nổi bật.
+- [x] **Kiểm thử tự động:** 29/29 test cases PASS (100% Green).
+- [x] **Đóng gói phát hành:** Đã publish phiên bản mới nhất ra `bin\publish\LumiePlayer.exe`.
+
+
+
 

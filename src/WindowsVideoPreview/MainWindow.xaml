@@ -515,8 +515,7 @@
                         <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="Speed:" Foreground="{StaticResource BrushTextMuted}" FontSize="11" VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <ComboBox SelectedValue="{Binding PlaybackSpeed, Mode=TwoWay}" SelectedValuePath="Tag" Width="68" Height="28"
-                                      Background="{StaticResource BrushBgControl}" Foreground="{StaticResource BrushTextPrimary}" BorderBrush="{StaticResource BrushBorderSubtle}"
-                                      VerticalContentAlignment="Center">
+                                      Style="{StaticResource ModernStudioComboBox}">
                                 <ComboBoxItem Content="0.25x" Tag="0.25"/>
                                 <ComboBoxItem Content="0.5x" Tag="0.5"/>
                                 <ComboBoxItem Content="0.75x" Tag="0.75"/>
