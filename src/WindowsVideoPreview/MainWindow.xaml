@@ -494,7 +494,7 @@
                                 <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopBCommand}" ToolTip="Set Loop End (B) [key: .]">
                                     <TextBlock Text="Loop B ]" FontSize="11" FontWeight="SemiBold"/>
                                 </Button>
-                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="5,2" Command="{Binding ClearLoopCommand}" ToolTip="Clear A-B Loop [key: \]">
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="5,2" Command="{Binding ClearLoopCommand}" ToolTip="Clear A-B Loop [key: /]">
                                     <Path Data="{StaticResource IconClear}" Width="10" Height="10" Fill="{StaticResource BrushStatusDanger}" Stretch="Uniform"/>
                                 </Button>
                             </StackPanel>
@@ -684,7 +684,7 @@
                 <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="1" Command="{Binding OpenHotkeySettingsCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0" ToolTip="Click to customize keyboard shortcuts">
-                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [Shift+←/→] ±1s | [,] In | [.] Out | [Ctrl+L] Loop Mode | ⌨ Customize..." 
+                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [,] In | [.] Out | [/] Clear | [Ctrl+L] Loop Mode | ⌨ Customize..." 
                                FontSize="11" Foreground="{StaticResource BrushTextMuted}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">

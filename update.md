@@ -699,3 +699,44 @@ System.NullReferenceException: Object reference not set to an instance of an obj
     + Chuyển đổi tọa độ con trỏ chuột sang tọa độ cục bộ WPF bằng `PointFromScreen` với `PlacementMode.RelativePoint`, đảm bảo hiển thị mượt mà không xung đột giữa WinForms HWND và WPF Popup.
 - [x] **Kiểm thử tự động:** 54/54 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã build và cập nhật bản phát hành mới ra [bin/publish/LumiePlayer.exe](file:///d:/LONGHT/AI/MVP_AG/bin/publish/LumiePlayer.exe).
+
+---
+
+## 20. Kế Hoạch Cập Nhật Hotkey "/" Cho Nút Clear Loop A-B (v1.7.5)
+
+### 1. Phân Tích & Mục Tiêu
+- **Mục tiêu:** Cập nhật phím tắt mặc định của hành vi xóa đoạn Loop A-B (`ClearLoop`) thành phím `/` (`Key.OemQuestion`).
+- **Lợi ích công thái học (Ergonomics):**
+  - Trên hàng phím dưới cùng của bàn phím tiêu chuẩn (US Keyboard layout), 3 phím kề nhau gồm:
+    - `,` (Dấu phẩy): Đặt mốc Loop In (A).
+    - `.` (Dấu chấm): Đặt mốc Loop Out (B).
+    - `/` (Dấu gạch chéo): Xóa đoạn lặp (Clear Loop A-B).
+  - Chuỗi phím `,` -> `.` -> `/` tạo thành một cụm thao tác liền mạch, cực kỳ trực quan và thuận tay cho người dùng.
+
+### 2. Kế Hoạch Triển Khai
+1. **Cập nhật `HotkeyManager.cs`:**
+   - Thay đổi phím gán mặc định của `Actions.ClearLoop` thành `Key.OemQuestion` (`/`).
+   - Trong `MatchAction`: Bổ sung cơ chế dự phòng chấp nhận cả phím `Key.Divide` (dấu `/` trên bàn phím số Numpad) và `Key.OemBackslash` (`\`).
+   - Loại bỏ ánh xạ cũ của phím `/` vào `SetLoopB`.
+2. **Cập nhật `HotkeyBinding.cs`:**
+   - Đảm bảo ánh xạ hiển thị cả `Key.OemQuestion` và `Key.Divide` thành `"/"`.
+3. **Cập nhật `MainWindow.xaml`:**
+   - Cập nhật ToolTip nút Clear Loop thành `ToolTip="Clear A-B Loop [key: /]"`.
+   - Cập nhật dòng gợi ý phím tắt chân trang: `[,] In | [.] Out | [/] Clear`.
+4. **Kiểm thử tự động & Đóng gói:**
+   - Cập nhật test case trong `tests/WindowsVideoPreview.Tests/Program.cs` để xác nhận phím `/` kích hoạt `ClearLoop`.
+   - Build và publish ra `bin/publish/LumiePlayer.exe`, push code lên repository.
+
+---
+
+## 21. Kết Quả Triển Khai & Nghiệm Thu (v1.7.5)
+- [x] **Cập nhật thành công phím tắt `/` cho nút Clear Loop A-B:**
+  - Trong `HotkeyManager.cs`: Thiết lập mặc định `ClearLoop` với `Key.OemQuestion` (`/`), đồng thời dự phòng thêm phím `Divide` (Numpad `/`) và `OemBackslash` (`\`).
+  - Trong `HotkeyBinding.cs`: Định dạng hiển thị phím `/` chuẩn xác trên giao diện cấu hình phím tắt.
+  - Bộ 3 phím liền kề công thái học hoàn thiện:
+    + `,` : Đặt mốc Loop In (A)
+    + `.` : Đặt mốc Loop Out (B)
+    + `/` : Xóa đoạn Loop A-B (Clear Loop)
+  - Trong `MainWindow.xaml`: Cập nhật ToolTip nút Clear Loop `ToolTip="Clear A-B Loop [key: /]"` và thanh trạng thái shortcuts chân trang `[,] In | [.] Out | [/] Clear`.
+- [x] **Kiểm thử tự động:** Mở rộng và chạy thành công **56/56 test cases PASS** (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và cập nhật bản phát hành mới ra [bin/publish/LumiePlayer.exe](file:///d:/LONGHT/AI/MVP_AG/bin/publish/LumiePlayer.exe).

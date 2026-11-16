@@ -73,6 +73,7 @@ public class HotkeyBinding : INotifyPropertyChanged
             Key.OemComma => ",",
             Key.OemPeriod => ".",
             Key.OemQuestion => "/",
+            Key.Divide => "/",
             Key.OemOpenBrackets => "[",
             Key.OemCloseBrackets => "]",
             Key.OemBackslash => "\\",

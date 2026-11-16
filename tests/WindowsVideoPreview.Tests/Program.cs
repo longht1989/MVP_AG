@@ -191,8 +191,14 @@ class Program
         var actionB_period = hkm.MatchAction(System.Windows.Input.Key.OemPeriod, System.Windows.Input.ModifierKeys.None);
         Assert("Default Loop Out shortcut (Period)", actionB_period == HotkeyManager.Actions.SetLoopB, $"Action: {actionB_period}");
 
-        var actionB_slash = hkm.MatchAction(System.Windows.Input.Key.OemQuestion, System.Windows.Input.ModifierKeys.None);
-        Assert("Fallback Loop Out shortcut (Slash)", actionB_slash == HotkeyManager.Actions.SetLoopB, $"Action: {actionB_slash}");
+        var actionClear_slash = hkm.MatchAction(System.Windows.Input.Key.OemQuestion, System.Windows.Input.ModifierKeys.None);
+        Assert("Default Clear Loop shortcut (Slash)", actionClear_slash == HotkeyManager.Actions.ClearLoop, $"Action: {actionClear_slash}");
+
+        var actionClear_divide = hkm.MatchAction(System.Windows.Input.Key.Divide, System.Windows.Input.ModifierKeys.None);
+        Assert("Fallback Clear Loop shortcut (Numpad Divide)", actionClear_divide == HotkeyManager.Actions.ClearLoop, $"Action: {actionClear_divide}");
+
+        var actionClear_backslash = hkm.MatchAction(System.Windows.Input.Key.OemBackslash, System.Windows.Input.ModifierKeys.None);
+        Assert("Fallback Clear Loop shortcut (Backslash)", actionClear_backslash == HotkeyManager.Actions.ClearLoop, $"Action: {actionClear_backslash}");
 
         var actionLoopMode = hkm.MatchAction(System.Windows.Input.Key.L, System.Windows.Input.ModifierKeys.Control);
         Assert("Loop Mode shortcut (Ctrl+L)", actionLoopMode == HotkeyManager.Actions.ToggleLoopMode, $"Action: {actionLoopMode}");

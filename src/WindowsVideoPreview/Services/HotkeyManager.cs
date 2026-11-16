@@ -58,10 +58,10 @@ public class HotkeyManager
         AddBinding(Actions.JumpToEndOrLoopOut, "Jump to End or Loop Out (B)", "Navigation", Key.Right, ModifierKeys.Control);
         AddBinding(Actions.JumpToTimecode, "Jump to Timecode / Frame", "Navigation", Key.G, ModifierKeys.Control);
 
-        // Loop A-B (Default: , for A, . for B)
+        // Loop A-B (Default: , for A, . for B, / for Clear)
         AddBinding(Actions.SetLoopA, "Set Loop In (Start A)", "Loop", Key.OemComma, ModifierKeys.None);
         AddBinding(Actions.SetLoopB, "Set Loop Out (End B)", "Loop", Key.OemPeriod, ModifierKeys.None);
-        AddBinding(Actions.ClearLoop, "Clear Loop A-B", "Loop", Key.OemBackslash, ModifierKeys.None);
+        AddBinding(Actions.ClearLoop, "Clear Loop A-B", "Loop", Key.OemQuestion, ModifierKeys.None);
 
         // Media & Files
         AddBinding(Actions.OpenFileA, "Open Video A", "Media", Key.O, ModifierKeys.Control);
@@ -133,13 +133,13 @@ public class HotkeyManager
 
     public string? MatchAction(Key key, ModifierKeys modifiers)
     {
-        // Special case: SetLoopB also accepts OemQuestion (/) by default if SetLoopB has not been remapped or if / is pressed
-        var bSetB = _bindings.FirstOrDefault(b => b.ActionId == Actions.SetLoopB);
-        if (bSetB != null && key == Key.OemQuestion && modifiers == ModifierKeys.None)
+        // Special case: ClearLoop also accepts Divide (Numpad /) and OemBackslash (\) by default
+        var bClear = _bindings.FirstOrDefault(b => b.ActionId == Actions.ClearLoop);
+        if (bClear != null && (key == Key.Divide || key == Key.OemBackslash) && modifiers == ModifierKeys.None)
         {
-            if (bSetB.Key == Key.OemPeriod && bSetB.Modifiers == ModifierKeys.None)
+            if (bClear.Key == Key.OemQuestion && bClear.Modifiers == ModifierKeys.None)
             {
-                return Actions.SetLoopB;
+                return Actions.ClearLoop;
             }
         }
 
