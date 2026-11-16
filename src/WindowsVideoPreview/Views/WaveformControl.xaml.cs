@@ -301,9 +301,13 @@ public partial class WaveformControl : System.Windows.Controls.UserControl
 
     private void UpdateLoopRect()
     {
+        if (LoopBand == null || LoopInMarker == null || LoopOutMarker == null) return;
+
         if (Duration <= 0 || ActualWidth <= 0 || (!LoopStart.HasValue && !LoopEnd.HasValue))
         {
-            LoopRect.Visibility = Visibility.Collapsed;
+            LoopBand.Visibility = Visibility.Collapsed;
+            LoopInMarker.Visibility = Visibility.Collapsed;
+            LoopOutMarker.Visibility = Visibility.Collapsed;
             return;
         }
 
@@ -312,17 +316,28 @@ public partial class WaveformControl : System.Windows.Controls.UserControl
 
         if (end <= start)
         {
-            LoopRect.Visibility = Visibility.Collapsed;
+            LoopBand.Visibility = Visibility.Collapsed;
+            LoopInMarker.Visibility = Visibility.Collapsed;
+            LoopOutMarker.Visibility = Visibility.Collapsed;
             return;
         }
 
         double startX = Math.Clamp(start / Duration, 0.0, 1.0) * ActualWidth;
         double endX = Math.Clamp(end / Duration, 0.0, 1.0) * ActualWidth;
+        double h = ActualHeight > 0 ? ActualHeight : 64;
 
-        Canvas.SetLeft(LoopRect, startX);
-        LoopRect.Width = Math.Max(2, endX - startX);
-        LoopRect.Height = ActualHeight;
-        LoopRect.Visibility = Visibility.Visible;
+        Canvas.SetLeft(LoopBand, startX);
+        LoopBand.Width = Math.Max(2, endX - startX);
+        LoopBand.Height = h;
+        LoopBand.Visibility = Visibility.Visible;
+
+        Canvas.SetLeft(LoopInMarker, Math.Max(0, startX - 1));
+        LoopInMarker.Height = h;
+        LoopInMarker.Visibility = LoopStart.HasValue ? Visibility.Visible : Visibility.Collapsed;
+
+        Canvas.SetLeft(LoopOutMarker, Math.Max(0, endX - 2));
+        LoopOutMarker.Height = h;
+        LoopOutMarker.Visibility = LoopEnd.HasValue ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)

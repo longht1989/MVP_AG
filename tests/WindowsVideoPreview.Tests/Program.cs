@@ -226,15 +226,20 @@ class Program
         Assert("LoopMode persistence", reloaded.LoopMode == "Loop", reloaded.LoopMode);
         Assert("CustomHotkeys persistence", reloaded.CustomHotkeys.ContainsKey(HotkeyManager.Actions.PlayPause) && reloaded.CustomHotkeys[HotkeyManager.Actions.PlayPause] == "K");
 
-        // 8. Test Video Zoom Engine
-        Console.WriteLine("\n--- Testing Video Zoom Engine ---");
+        // 8. Test Video Zoom & Pan Engine
+        Console.WriteLine("\n--- Testing Video Zoom & Pan Engine ---");
         using (var zoomPlayer = new MpvPlayer())
         {
             Assert("Initial ZoomFactor is 100%", Math.Abs(zoomPlayer.ZoomFactor - 1.0) < 0.001);
             zoomPlayer.AdjustZoom(1.15);
             Assert("Zoom In increases factor", zoomPlayer.ZoomFactor > 1.0, $"ZoomFactor: {zoomPlayer.ZoomFactor}");
+
+            zoomPlayer.SetPan(0.5, -0.3);
+            Assert("Pan set correctly", Math.Abs(zoomPlayer.PanX - 0.5) < 0.001 && Math.Abs(zoomPlayer.PanY - (-0.3)) < 0.001, $"Pan: ({zoomPlayer.PanX}, {zoomPlayer.PanY})");
+
             zoomPlayer.ResetZoom();
-            Assert("ResetZoom restores 100%", Math.Abs(zoomPlayer.ZoomFactor - 1.0) < 0.001);
+            Assert("ResetZoom restores 100% and resets Pan", Math.Abs(zoomPlayer.ZoomFactor - 1.0) < 0.001 && zoomPlayer.PanX == 0 && zoomPlayer.PanY == 0);
+
             zoomPlayer.AdjustZoom(1.0 / 1.15);
             Assert("Zoom Out decreases factor", zoomPlayer.ZoomFactor < 1.0, $"ZoomFactor: {zoomPlayer.ZoomFactor}");
         }
@@ -259,6 +264,35 @@ class Program
             vm.TimeDisplayFormat = "Frames";
             Assert("Frames Mode Primary is Frame", vm.PrimaryTimeTextA.StartsWith("Frame"), vm.PrimaryTimeTextA);
             Assert("Frames Mode Secondary contains Timecode", vm.SecondaryTimeTextA.Contains("00:02:05"), vm.SecondaryTimeTextA);
+
+            // 10. Test Smart Ctrl+Left/Right Hotkeys
+            Console.WriteLine("\n--- Testing Smart Ctrl+Left / Right Navigation ---");
+            vm.Duration = 100.0;
+            vm.Position = 50.0;
+
+            // Without Loop A-B
+            vm.JumpToStartOrLoopInCommand.Execute(null);
+            Assert("Without Loop, JumpToStart goes to 0.0s", vm.Position == 0.0, $"{vm.Position}s");
+
+            vm.JumpToEndOrLoopOutCommand.Execute(null);
+            Assert("Without Loop, JumpToEnd goes to Duration", vm.Position == 100.0, $"{vm.Position}s");
+
+            // With Loop A-B
+            vm.LoopStart = 20.0;
+            vm.LoopEnd = 80.0;
+            vm.Position = 50.0;
+
+            vm.JumpToStartOrLoopInCommand.Execute(null);
+            Assert("With Loop, JumpToStart goes to LoopStart", vm.Position == 20.0, $"{vm.Position}s");
+
+            vm.JumpToEndOrLoopOutCommand.Execute(null);
+            Assert("With Loop, JumpToEnd goes to LoopEnd", vm.Position == 80.0, $"{vm.Position}s");
+
+            var actionCtrlLeft = vm.HotkeyManager.MatchAction(System.Windows.Input.Key.Left, System.Windows.Input.ModifierKeys.Control);
+            Assert("Hotkey Ctrl+Left matches JumpToStartOrLoopIn", actionCtrlLeft == HotkeyManager.Actions.JumpToStartOrLoopIn, actionCtrlLeft ?? "");
+
+            var actionCtrlRight = vm.HotkeyManager.MatchAction(System.Windows.Input.Key.Right, System.Windows.Input.ModifierKeys.Control);
+            Assert("Hotkey Ctrl+Right matches JumpToEndOrLoopOut", actionCtrlRight == HotkeyManager.Actions.JumpToEndOrLoopOut, actionCtrlRight ?? "");
         }
 
         Console.WriteLine("\n==================================================");

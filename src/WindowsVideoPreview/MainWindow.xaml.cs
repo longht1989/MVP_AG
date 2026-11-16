@@ -330,6 +330,12 @@ public partial class MainWindow : Window
             case HotkeyManager.Actions.ClearLoop:
                 _vm.ClearLoopCommand.Execute(null);
                 break;
+            case HotkeyManager.Actions.JumpToStartOrLoopIn:
+                _vm.JumpToStartOrLoopInCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.JumpToEndOrLoopOut:
+                _vm.JumpToEndOrLoopOutCommand.Execute(null);
+                break;
             case HotkeyManager.Actions.ToggleLoopMode:
                 _vm.CycleLoopModeCommand.Execute(null);
                 break;

@@ -16,8 +16,12 @@
         <!-- Canvas for time tick lines and marks -->
         <Canvas x:Name="TicksCanvas" IsHitTestVisible="False"/>
 
-        <!-- A-B Loop highlight rect -->
-        <Border x:Name="LoopRect" Background="#33F59E0B" BorderBrush="#F59E0B" BorderThickness="2,0,2,0" Visibility="Collapsed" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+        <!-- Canvas for A-B Loop highlight band & markers -->
+        <Canvas x:Name="LoopCanvas" IsHitTestVisible="False">
+            <Border x:Name="LoopBand" Background="#33F59E0B" BorderBrush="#F59E0B" BorderThickness="1,0,1,0" Visibility="Collapsed"/>
+            <Border x:Name="LoopInMarker" Background="#F59E0B" Width="3" Height="64" CornerRadius="1" Visibility="Collapsed"/>
+            <Border x:Name="LoopOutMarker" Background="#F59E0B" Width="3" Height="64" CornerRadius="1" Visibility="Collapsed"/>
+        </Canvas>
 
         <!-- Hover line and hover timecode pill -->
         <Line x:Name="HoverGuideLine" Y1="0" Y2="64" Stroke="#55FFFFFF" StrokeThickness="1" StrokeDashArray="2,2" Visibility="Collapsed" IsHitTestVisible="False"/>

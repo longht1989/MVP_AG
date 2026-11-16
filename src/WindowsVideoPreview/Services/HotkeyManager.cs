@@ -31,6 +31,8 @@ public class HotkeyManager
         public const string OpenFileA = "OpenFileA";
         public const string OpenFileB = "OpenFileB";
         public const string JumpToTimecode = "JumpToTimecode";
+        public const string JumpToStartOrLoopIn = "JumpToStartOrLoopIn";
+        public const string JumpToEndOrLoopOut = "JumpToEndOrLoopOut";
         public const string FlipWipe = "FlipWipe";
     }
 
@@ -52,6 +54,8 @@ public class HotkeyManager
         AddBinding(Actions.FrameStepForward, "Step 1 Frame Forward", "Navigation", Key.Right, ModifierKeys.None);
         AddBinding(Actions.SeekBackward1s, "Seek Backward 1s", "Navigation", Key.Left, ModifierKeys.Shift);
         AddBinding(Actions.SeekForward1s, "Seek Forward 1s", "Navigation", Key.Right, ModifierKeys.Shift);
+        AddBinding(Actions.JumpToStartOrLoopIn, "Jump to Start or Loop In (A)", "Navigation", Key.Left, ModifierKeys.Control);
+        AddBinding(Actions.JumpToEndOrLoopOut, "Jump to End or Loop Out (B)", "Navigation", Key.Right, ModifierKeys.Control);
         AddBinding(Actions.JumpToTimecode, "Jump to Timecode / Frame", "Navigation", Key.G, ModifierKeys.Control);
 
         // Loop A-B (Default: , for A, . for B)

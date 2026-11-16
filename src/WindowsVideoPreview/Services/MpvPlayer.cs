@@ -18,6 +18,7 @@ public class MpvPlayer : IDisposable
     public event Action? FileLoaded;
     public event Action? FileEnded;
     public event Action<double>? ZoomChanged;
+    public event Action<double, double>? PanChanged;
 
     public double TimePos { get; private set; }
     public double Duration { get; private set; }
@@ -28,6 +29,8 @@ public class MpvPlayer : IDisposable
     public bool IsLoaded { get; private set; }
     public bool IsEnded { get; private set; }
     public double ZoomFactor { get; private set; } = 1.0;
+    public double PanX { get; private set; } = 0.0;
+    public double PanY { get; private set; } = 0.0;
     public string CurrentFilePath { get; private set; } = string.Empty;
 
     public void Initialize(IntPtr hwnd)
@@ -240,11 +243,33 @@ public class MpvPlayer : IDisposable
         }
     }
 
+    public void SetPan(double panX, double panY)
+    {
+        lock (_lock)
+        {
+            PanX = Math.Clamp(panX, -3.0, 3.0);
+            PanY = Math.Clamp(panY, -3.0, 3.0);
+            if (_client != null)
+            {
+                SafeSetProperty("video-pan-x", PanX.ToString(CultureInfo.InvariantCulture));
+                SafeSetProperty("video-pan-y", PanY.ToString(CultureInfo.InvariantCulture));
+            }
+            PanChanged?.Invoke(PanX, PanY);
+        }
+    }
+
+    public void AdjustPan(double deltaX, double deltaY)
+    {
+        SetPan(PanX + deltaX, PanY + deltaY);
+    }
+
     public void ResetZoom()
     {
         lock (_lock)
         {
             ZoomFactor = 1.0;
+            PanX = 0.0;
+            PanY = 0.0;
             if (_client != null)
             {
                 SafeSetProperty("video-zoom", "0");
@@ -252,6 +277,7 @@ public class MpvPlayer : IDisposable
                 SafeSetProperty("video-pan-y", "0");
             }
             ZoomChanged?.Invoke(1.0);
+            PanChanged?.Invoke(0.0, 0.0);
         }
     }
 

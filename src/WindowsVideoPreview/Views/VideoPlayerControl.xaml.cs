@@ -15,6 +15,10 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
     private MpvPlayer? _player;
     private System.Windows.Threading.DispatcherTimer? _zoomToastTimer;
     private readonly WinFormsMouseWheelFilter _wheelFilter;
+    private bool _isPanning;
+    private System.Drawing.Point _panStartPoint;
+    private double _initialPanX;
+    private double _initialPanY;
 
     public event Action<string>? FileDropped;
     public event Action? OpenRequested;
@@ -363,7 +367,20 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
         ZoomBadgeText.Text = $"{percent}%";
         ZoomBadge.Visibility = Math.Abs(factor - 1.0) > 0.01 ? Visibility.Visible : Visibility.Collapsed;
 
-        ZoomToast.Visibility = Visibility.Visible;
+        // Position floating cursor tooltip next to mouse if within control bounds
+        var mousePos = Mouse.GetPosition(this);
+        if (mousePos.X >= 0 && mousePos.Y >= 0 && mousePos.X <= ActualWidth && mousePos.Y <= ActualHeight && ActualWidth > 0 && ActualHeight > 0)
+        {
+            Canvas.SetLeft(ZoomCursorTooltip, Math.Clamp(mousePos.X + 16, 8, Math.Max(8, ActualWidth - 85)));
+            Canvas.SetTop(ZoomCursorTooltip, Math.Clamp(mousePos.Y + 16, 8, Math.Max(8, ActualHeight - 40)));
+            ZoomCursorTooltipText.Text = $"{percent}%";
+            ZoomCursorTooltip.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            ZoomToast.Visibility = Visibility.Visible;
+        }
+
         if (_zoomToastTimer == null)
         {
             _zoomToastTimer = new System.Windows.Threading.DispatcherTimer
@@ -374,6 +391,7 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
             {
                 _zoomToastTimer.Stop();
                 ZoomToast.Visibility = Visibility.Collapsed;
+                ZoomCursorTooltip.Visibility = Visibility.Collapsed;
             };
         }
         _zoomToastTimer.Stop();
@@ -386,6 +404,67 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
         e.Handled = true;
     }
 
+    public void StartPan(System.Drawing.Point screenPt)
+    {
+        if (_player == null) return;
+        _isPanning = true;
+        _panStartPoint = screenPt;
+        _initialPanX = _player.PanX;
+        _initialPanY = _player.PanY;
+        try { VideoPanel.Cursor = System.Windows.Forms.Cursors.SizeAll; } catch { }
+    }
+
+    public void UpdatePan(System.Drawing.Point screenPt)
+    {
+        if (!_isPanning || _player == null) return;
+        double w = Math.Max(1, VideoPanel.Width);
+        double h = Math.Max(1, VideoPanel.Height);
+        double zoom = Math.Max(0.1, _player.ZoomFactor);
+
+        double deltaPxX = screenPt.X - _panStartPoint.X;
+        double deltaPxY = screenPt.Y - _panStartPoint.Y;
+
+        double deltaNormX = deltaPxX / (w * zoom);
+        double deltaNormY = deltaPxY / (h * zoom);
+
+        _player.SetPan(_initialPanX + deltaNormX, _initialPanY + deltaNormY);
+    }
+
+    public void EndPan()
+    {
+        _isPanning = false;
+        try { VideoPanel.Cursor = System.Windows.Forms.Cursors.Default; } catch { }
+    }
+
+    public void OpenContextMenuAtCursor()
+    {
+        if (ContextMenu != null)
+        {
+            ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+            ContextMenu.IsOpen = true;
+        }
+    }
+
+    private void OnResetZoomMenuClick(object sender, RoutedEventArgs e)
+    {
+        ResetZoom();
+    }
+
+    private void OnFitToWindowMenuClick(object sender, RoutedEventArgs e)
+    {
+        ResetZoom();
+    }
+
+    private void OnZoomInMenuClick(object sender, RoutedEventArgs e)
+    {
+        ZoomIn();
+    }
+
+    private void OnZoomOutMenuClick(object sender, RoutedEventArgs e)
+    {
+        ZoomOut();
+    }
+
     private class WinFormsMouseWheelFilter : System.Windows.Forms.IMessageFilter
     {
         private readonly VideoPlayerControl _control;
@@ -393,7 +472,12 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
 
         public bool PreFilterMessage(ref System.Windows.Forms.Message m)
         {
+            const int WM_MOUSEMOVE = 0x0200;
+            const int WM_RBUTTONUP = 0x0205;
+            const int WM_MBUTTONDOWN = 0x0207;
+            const int WM_MBUTTONUP = 0x0208;
             const int WM_MOUSEWHEEL = 0x020A;
+
             if (m.Msg == WM_MOUSEWHEEL)
             {
                 bool isCtrl = (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Control) == System.Windows.Forms.Keys.Control ||
@@ -422,6 +506,64 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
                     catch { }
                 }
             }
+            else if (m.Msg == WM_MBUTTONDOWN)
+            {
+                bool isCtrl = (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Control) == System.Windows.Forms.Keys.Control ||
+                              (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+                if (isCtrl)
+                {
+                    try
+                    {
+                        var panel = _control.VideoPanel;
+                        if (panel != null && panel.IsHandleCreated)
+                        {
+                            var screenPt = System.Windows.Forms.Cursor.Position;
+                            var clientPt = panel.PointToClient(screenPt);
+                            if (panel.ClientRectangle.Contains(clientPt))
+                            {
+                                _control.Dispatcher.Invoke(() => _control.StartPan(screenPt));
+                                return true;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            else if (m.Msg == WM_MOUSEMOVE)
+            {
+                if (_control._isPanning)
+                {
+                    var screenPt = System.Windows.Forms.Cursor.Position;
+                    _control.Dispatcher.Invoke(() => _control.UpdatePan(screenPt));
+                }
+            }
+            else if (m.Msg == WM_MBUTTONUP)
+            {
+                if (_control._isPanning)
+                {
+                    _control.Dispatcher.Invoke(() => _control.EndPan());
+                    return true;
+                }
+            }
+            else if (m.Msg == WM_RBUTTONUP)
+            {
+                try
+                {
+                    var panel = _control.VideoPanel;
+                    if (panel != null && panel.IsHandleCreated)
+                    {
+                        var screenPt = System.Windows.Forms.Cursor.Position;
+                        var clientPt = panel.PointToClient(screenPt);
+                        if (panel.ClientRectangle.Contains(clientPt))
+                        {
+                            _control.Dispatcher.Invoke(() => _control.OpenContextMenuAtCursor());
+                            return true;
+                        }
+                    }
+                }
+                catch { }
+            }
+
             return false;
         }
     }

@@ -547,3 +547,106 @@ Dựa trên phản hồi và các ảnh chụp lỗi của người dùng:
   - Bổ sung Badge tỉ lệ zoom trên Top Header của video. Khi click chuột vào badge hoặc double-click vào video, zoom lập tức được reset về `100%`.
 - [x] **Kiểm thử tự động:** Mở rộng và chạy thành công 47/47 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã build và publish bản phát hành hoàn thiện mới nhất ra `bin\publish\LumiePlayer.exe`.
+
+---
+
+## 16. Kế Hoạch Nâng Cấp: Hiển Thị Loop A-B Trên Waveform, Pan Video Bằng Ctrl+Chuột Giữa, Tooltip Zoom Bám Chuột & Hotkey Ctrl+Left/Right (v1.7.3)
+
+### 1. Phân Tích Kỹ Thuật & Giải Pháp Chi Tiết
+
+1. **Hiển thị trực quan Loop A-B trên thanh Waveform Audio:**
+   - **Nguyên nhân hiện tại:** Trong `WaveformControl.xaml`, `LoopRect` nằm trực tiếp trong thẻ `<Grid>`, khiến các lệnh `Canvas.SetLeft(LoopRect, startX)` không có hiệu lực, dẫn đến việc vùng lặp bị ghim ở tọa độ 0 hoặc không hiển thị đúng vị trí.
+   - **Giải pháp:**
+     - Tạo một `Canvas x:Name="LoopCanvas"` riêng biệt bên trong `WaveformControl.xaml`.
+     - Chuyển `LoopRect` vào `LoopCanvas` làm dải highlight hổ phách (`#33F59E0B`, viền `#F59E0B`).
+     - Bổ sung 2 vạch mốc In Marker `[` và Out Marker `]` màu vàng hổ phách sắc nét ở hai đầu biên tương tự như Timeline chính.
+     - Cập nhật hàm `UpdateLoopRect()` đồng bộ khi `LoopStart`, `LoopEnd`, `Duration` hoặc kích thước thay đổi.
+
+2. **Tính năng Pan Video bằng tổ hợp `Ctrl + Middle Mouse Drag` (Nhấn giữ chuột giữa và kéo):**
+   - **Mục tiêu:** Khi video được phóng to (`ZoomFactor > 1.0`), người dùng giữ phím `Ctrl`, nhấn giữ nút chuột giữa (Middle Mouse Button) và rê chuột để di chuyển góc nhìn (Pan) toàn bộ khung hình.
+   - **Giải pháp kỹ thuật MPV:**
+     - MPV hỗ trợ hai thuộc tính điều khiển vị trí khung hình: `video-pan-x` và `video-pan-y` (thang chuẩn hóa từ $-3.0$ đến $3.0$).
+     - Trong `MpvPlayer.cs`:
+       - Thêm `PanX` và `PanY` (mặc định $0.0$).
+       - Phương thức `SetPan(double panX, double panY)`: cập nhật thuộc tính vào MPV `video-pan-x` và `video-pan-y`.
+       - Trong `ResetZoom()`: reset cả `PanX = 0`, `PanY = 0`.
+     - Trong `VideoPlayerControl.xaml.cs`:
+       - Bắt sự kiện nhấn chuột giữa qua `WinFormsMouseWheelFilter` hoặc `VideoPanel.MouseDown` (`MouseButtons.Middle`) và WPF `PreviewMouseDown` (`MouseButton.Middle`).
+       - Khi `Ctrl` được nhấn và phím chuột giữa được đè: ghi lại tọa độ chuột ban đầu, thay đổi con trỏ thành biểu tượng bàn tay kéo (`Cursors.SizeAll` hoặc `Cursors.Hand`).
+       - Trong `MouseMove`: tính toán độ dời `deltaX` và `deltaY` theo tỉ lệ kích thước và `ZoomFactor`, cập nhật `SetPan(...)` tức thì theo thời gian thực.
+       - Khi nhả chuột giữa (`MouseUp`): kết thúc quá trình pan và khôi phục con trỏ chuột.
+
+3. **Tooltip hiển thị % Zoom bám theo con trỏ chuột (Float at Cursor):**
+   - **Mục tiêu:** Khi người dùng giữ `Ctrl` và lăn chuột để zoom, một tooltip nhỏ gọn, sắc nét (`🔍 150%`) sẽ xuất hiện ngay sát đầu con trỏ chuột `(X + 16, Y + 16)` và tự động mờ dần sau $1.2\text{s}$ khi ngừng thao tác.
+   - **Giải pháp:**
+     - Thiết kế `ZoomCursorTooltip` bên trong một Canvas overlay trên `VideoPlayerControl`.
+     - Khi cuộn chuột zoom, cập nhật vị trí `Canvas.SetLeft` và `Canvas.SetTop` bám sát tọa độ chuột hiện tại, cập nhật nội dung văn bản và kích hoạt timer tự ẩn $1.2\text{s}$.
+
+4. **Context Menu khi click chuột phải vào video:**
+   - **Mục tiêu:** Người dùng click chuột phải vào vùng video để mở menu Studio Dark:
+     - `Reset Zoom (100%)` (Icon Fit, phím tắt gợi ý)
+     - `Fit to Window` (Khôi phục zoom 100% và pan 0,0)
+     - Phân cách (Separator)
+     - `Zoom In (+15%)`
+     - `Zoom Out (-15%)`
+   - **Giải pháp:** Gắn `ContextMenu` theo style `ModernStudioContextMenu` vào `VideoPlayerControl`, đồng thời bắt sự kiện chuột phải trên cả tầng WinForms `VideoPanel` và WPF.
+
+5. **Phím tắt thông minh `Ctrl + Left` & `Ctrl + Right`:**
+   - **Mục tiêu:**
+     - Nhấn `Ctrl + Left`: Nếu ĐANG CÓ Loop A-B -> Nhảy tức thì về mốc Loop In (A); Nếu KHÔNG có Loop A-B -> Nhảy về đầu timeline (`00:00:00.000`).
+     - Nhấn `Ctrl + Right`: Nếu ĐANG CÓ Loop A-B -> Nhảy tức thì về mốc Loop Out (B); Nếu KHÔNG có Loop A-B -> Nhảy về cuối timeline (hết video).
+   - **Giải pháp:**
+     - Đăng ký 2 Action mới trong `HotkeyManager`: `JumpToStartOrLoopIn` (mặc định `Ctrl+Left`) và `JumpToEndOrLoopOut` (mặc định `Ctrl+Right`).
+     - Bổ sung lệnh và xử lý phím tắt trong `MainViewModel.cs`, hiển thị rõ ràng trong hộp thoại `HotkeySettingsDialog` để người dùng có thể tùy chỉnh.
+
+---
+
+### 2. Kế Hoạch Triển Khai Chi Tiết
+
+1. **Cập nhật `WaveformControl.xaml` & `WaveformControl.xaml.cs`:**
+   - Đưa `LoopRect` vào `Canvas x:Name="LoopCanvas"`.
+   - Bổ sung 2 vạch biên In `[` và Out `]`.
+   - Cập nhật hàm `UpdateLoopRect()` hiển thị chuẩn xác cả dải màu và 2 mốc biên.
+2. **Cập nhật `MpvPlayer.cs`:**
+   - Bổ sung `PanX`, `PanY`, phương thức `SetPan(double x, double y)`.
+   - Bổ sung `ResetPan()` và gọi trong `ResetZoom()`.
+3. **Cập nhật `VideoPlayerControl.xaml` & `VideoPlayerControl.xaml.cs`:**
+   - Thêm `ZoomCursorTooltip` (bám theo con trỏ chuột).
+   - Bổ sung bộ bắt sự kiện chuột giữa `Ctrl + Middle Mouse Drag` để Pan khung hình mượt mà.
+   - Thêm `ModernStudioContextMenu` khi chuột phải vào khung hình video.
+4. **Cập nhật `HotkeyManager.cs` & `MainViewModel.cs`:**
+   - Đăng ký hành vi `JumpToStartOrLoopIn` (`Ctrl+Left`) và `JumpToEndOrLoopOut` (`Ctrl+Right`).
+   - Xử lý logic nhảy thông minh theo trạng thái loop A-B.
+5. **Kiểm thử tự động & Đóng gói:**
+   - Viết thêm test cases kiểm thử Pan, Waveform Loop rect, và Hotkey `Ctrl+Left/Right`.
+   - Chạy test suite `dotnet run --project tests/WindowsVideoPreview.Tests`.
+   - Đóng gói ra `bin/publish/LumiePlayer.exe` và commit lên GitHub.
+
+---
+
+## 17. Kết Quả Triển Khai & Nghiệm Thu (v1.7.3)
+- [x] **Đánh dấu Loop A-B hiển thị hoàn hảo trên thanh Waveform:**
+  - Chuyển `LoopRect` vào `Canvas x:Name="LoopCanvas"` riêng biệt trong `WaveformControl.xaml`, kích hoạt thành công cơ chế `Canvas.SetLeft` tuyệt đối.
+  - Hiển thị đồng nhất 100% với Timeline chính: dải highlight màu vàng hổ phách (`#33F59E0B`, viền `#F59E0B`) bao trọn chiều cao 64px của sóng âm, kèm hai vạch biên In `[` và Out `]` nổi bật.
+  - Tự động cập nhật tức thì khi nạp video, đổi mốc Loop A/B hoặc thay đổi kích thước cửa sổ.
+- [x] **Tính năng Pan Video bằng `Ctrl + Middle Mouse Drag` (Nhấn giữ chuột giữa và kéo):**
+  - Tích hợp điều khiển phần cứng MPV `video-pan-x` và `video-pan-y` trong `MpvPlayer.cs`.
+  - Bộ lọc sự kiện chuột WinForms `IMessageFilter` và WPF bắt chính xác tổ hợp `Ctrl` + nút chuột giữa (`WM_MBUTTONDOWN`), chuyển con trỏ chuột sang `Cursors.SizeAll` và di chuyển góc nhìn video theo thời gian thực tương ứng với tỉ lệ zoom.
+  - Khi nhả chuột giữa (`WM_MBUTTONUP`), kết thúc pan và khôi phục con trỏ chuột mặc định.
+- [x] **Tooltip Zoom bám sát con trỏ chuột (Float at Cursor):**
+  - Bổ sung `ZoomCursorTooltip` trong `VideoPlayerControl.xaml`.
+  - Khi người dùng giữ `Ctrl` và lăn chuột để zoom, tooltip nhỏ gọn thanh lịch hiển thị mức phần trăm zoom (ví dụ `150%`) bám ngay sát đầu con trỏ chuột `(X + 16, Y + 16)`.
+  - Tự động mờ dần và biến mất sau $1.2\text{s}$ khi ngừng lăn chuột.
+- [x] **Context Menu chuột phải trên khung hình Video:**
+  - Thiết kế `ModernStudioContextMenu` tối màu Studio chuyên nghiệp khi bấm chuột phải vào video:
+    + `Reset Zoom (100%)` (Icon Fit, reset ngay lập tức cả Zoom và Pan).
+    + `Fit to Window` (Căn vừa khít cửa sổ).
+    + Phân cách (Separator).
+    + `Zoom In (+15%)` / `Zoom Out (-15%)`.
+  - Bắt sự kiện chuột phải trên cả tầng WinForms HWND `VideoPanel` và WPF, đảm bảo menu luôn xuất hiện chuẩn xác 100% tại vị trí con trỏ chuột.
+- [x] **Phím tắt thông minh `Ctrl + Left` & `Ctrl + Right`:**
+  - `Ctrl + Left`: Nếu đang có đoạn Loop A-B -> Nhảy ngay về mốc In (A); Nếu không có loop -> Nhảy về đầu timeline (`0.0s`).
+  - `Ctrl + Right`: Nếu đang có đoạn Loop A-B -> Nhảy ngay về mốc Out (B); Nếu không có loop -> Nhảy về cuối timeline (hết video).
+  - Đăng ký chính thức 2 Action `JumpToStartOrLoopIn` và `JumpToEndOrLoopOut` trong `HotkeyManager`, cho phép người dùng tùy ý đổi phím tắt trong hộp thoại Shortcuts.
+- [x] **Kiểm thử tự động:** Mở rộng và chạy thành công **54/54 test cases PASS** (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và publish bản phát hành hoàn thiện mới nhất ra [bin/publish/LumiePlayer.exe](file:///d:/LONGHT/AI/MVP_AG/bin/publish/LumiePlayer.exe).

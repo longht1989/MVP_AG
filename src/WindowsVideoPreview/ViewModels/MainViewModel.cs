@@ -472,6 +472,8 @@ public class MainViewModel : ViewModelBase
     public ICommand SetLoopACommand { get; }
     public ICommand SetLoopBCommand { get; }
     public ICommand ClearLoopCommand { get; }
+    public ICommand JumpToStartOrLoopInCommand { get; }
+    public ICommand JumpToEndOrLoopOutCommand { get; }
     public ICommand AdjustOffsetCommand { get; }
     public ICommand ResetOffsetCommand { get; }
     public ICommand OpenFileACommand { get; }
@@ -558,6 +560,16 @@ public class MainViewModel : ViewModelBase
         {
             LoopStart = null;
             LoopEnd = null;
+        });
+        JumpToStartOrLoopInCommand = new RelayCommand(() =>
+        {
+            double target = LoopStart ?? 0.0;
+            UserSeek(target);
+        });
+        JumpToEndOrLoopOutCommand = new RelayCommand(() =>
+        {
+            double target = LoopEnd ?? Duration;
+            UserSeek(target);
         });
 
         AdjustOffsetCommand = new RelayCommand(param =>
