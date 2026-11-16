@@ -174,6 +174,8 @@ class Program
             await Task.Delay(150);
             double posAfterBack = player.TimePos;
             Assert("Frame step backward", posAfterBack <= posAfterStep, $"Pos: {posAfterStep:F4} -> {posAfterBack:F4}");
+            player.Pause();
+            await Task.Delay(100);
         }
         catch (Exception ex)
         {
@@ -215,13 +217,13 @@ class Program
         Console.WriteLine("\n--- Testing LoopMode & TimeDisplayFormat Settings ---");
         var testSettings = new SettingsService();
         testSettings.Current.TimeDisplayFormat = "Frames";
-        testSettings.Current.LoopMode = "PingPong";
+        testSettings.Current.LoopMode = "Loop";
         testSettings.Current.CustomHotkeys[HotkeyManager.Actions.PlayPause] = "K";
         testSettings.Save();
 
         var reloaded = new SettingsService().Load();
         Assert("TimeDisplayFormat persistence", reloaded.TimeDisplayFormat == "Frames", reloaded.TimeDisplayFormat);
-        Assert("LoopMode persistence", reloaded.LoopMode == "PingPong", reloaded.LoopMode);
+        Assert("LoopMode persistence", reloaded.LoopMode == "Loop", reloaded.LoopMode);
         Assert("CustomHotkeys persistence", reloaded.CustomHotkeys.ContainsKey(HotkeyManager.Actions.PlayPause) && reloaded.CustomHotkeys[HotkeyManager.Actions.PlayPause] == "K");
 
         Console.WriteLine("\n==================================================");

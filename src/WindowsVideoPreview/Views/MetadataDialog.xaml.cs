@@ -11,6 +11,14 @@ public partial class MetadataDialog : Window
     public MetadataDialog(MediaMetadata? metaA, MediaMetadata? metaB)
     {
         InitializeComponent();
+        PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                Close();
+                e.Handled = true;
+            }
+        };
         PopulatePanel(PanelA, metaA);
         if (metaB != null)
         {

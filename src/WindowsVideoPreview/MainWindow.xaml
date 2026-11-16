@@ -381,18 +381,18 @@
                 <!-- TIMELINE SLIDER + TIMECODES ROW -->
                 <Grid Margin="0,2,0,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="240"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="160"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Current Timecode A (Clickable for Jump, Right-click to switch Format) -->
                     <Button Grid.Column="0" ToolTip="Click to Jump to Timecode/Frame | Right-Click to switch Format" Click="OnJumpTimecodeClick"
-                            Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4,2" VerticalAlignment="Center">
+                            Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4,2" VerticalAlignment="Center" HorizontalAlignment="Left">
                         <Button.ContextMenu>
-                            <ContextMenu Background="{StaticResource BrushBgSurface}" BorderBrush="{StaticResource BrushBorderStrong}">
-                                <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
-                                <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
+                            <ContextMenu Style="{StaticResource ModernStudioContextMenu}">
+                                <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode, Mode=OneWay}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
+                                <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode, Mode=OneWay}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
                             </ContextMenu>
                         </Button.ContextMenu>
                         <StackPanel Orientation="Horizontal">
@@ -427,9 +427,9 @@
                               PreviewMouseUp="OnTimelinePreviewMouseUp"
                               SizeChanged="OnTimelineGridSizeChanged">
                             <Grid.ContextMenu>
-                                <ContextMenu Background="{StaticResource BrushBgSurface}" BorderBrush="{StaticResource BrushBorderStrong}">
-                                    <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
-                                    <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
+                                <ContextMenu Style="{StaticResource ModernStudioContextMenu}">
+                                    <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode, Mode=OneWay}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
+                                    <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode, Mode=OneWay}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
                                 </ContextMenu>
                             </Grid.ContextMenu>
 
@@ -500,7 +500,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Loop Mode Cycle Button (No Loop / Loop / Ping Pong) -->
+                        <!-- Loop Mode Cycle Button (Once / Loop) -->
                         <Button Style="{StaticResource ToolbarBtn}" Height="28" Padding="7,2" Margin="0,0,8,0"
                                 Command="{Binding CycleLoopModeCommand}" 
                                 ToolTip="{Binding LoopModeToolTip}">
@@ -515,10 +515,6 @@
                                                     <Setter Property="Data" Value="{StaticResource IconLoop}"/>
                                                     <Setter Property="Fill" Value="{StaticResource BrushAccent}"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="PingPong">
-                                                    <Setter Property="Data" Value="{StaticResource IconPingPong}"/>
-                                                    <Setter Property="Fill" Value="#F59E0B"/>
-                                                </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Path.Style>
@@ -530,9 +526,6 @@
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="Loop">
                                                     <Setter Property="Foreground" Value="{StaticResource BrushAccent}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="PingPong">
-                                                    <Setter Property="Foreground" Value="#F59E0B"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

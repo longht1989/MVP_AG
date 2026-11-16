@@ -21,8 +21,7 @@ public enum AudioSourceOption
 public enum PlaybackLoopMode
 {
     NoLoop,
-    Loop,
-    PingPong
+    Loop
 }
 
 public class PlaybackCoordinator : IDisposable
@@ -76,12 +75,9 @@ public class PlaybackCoordinator : IDisposable
             Seek(restartPos, exact: true);
             Play();
         }
-        else if (LoopMode == PlaybackLoopMode.PingPong)
+        else
         {
-            double endPos = (LoopEnd.HasValue && LoopEnd.Value > 0) ? LoopEnd.Value : _playerA.Duration;
-            _playerA.SetPlayDirection(false);
-            Seek(Math.Max(0, endPos - 0.05), exact: true);
-            Play();
+            Pause();
         }
     }
 
@@ -93,38 +89,17 @@ public class PlaybackCoordinator : IDisposable
 
         if (upperBound > lowerBound && _playerA.IsLoaded)
         {
-            if (_playerA.IsPlayingForward)
+            if (pos >= upperBound)
             {
-                if (pos >= upperBound)
+                if (LoopMode == PlaybackLoopMode.Loop)
                 {
-                    if (LoopMode == PlaybackLoopMode.Loop || (hasLoopAB && LoopMode == PlaybackLoopMode.NoLoop))
-                    {
-                        if (LoopMode == PlaybackLoopMode.Loop)
-                        {
-                            Seek(lowerBound, exact: true);
-                            return;
-                        }
-                        else
-                        {
-                            Pause();
-                            Seek(upperBound, exact: true);
-                            return;
-                        }
-                    }
-                    else if (LoopMode == PlaybackLoopMode.PingPong)
-                    {
-                        _playerA.SetPlayDirection(false);
-                        Seek(Math.Max(lowerBound, upperBound - 0.05), exact: false);
-                        return;
-                    }
+                    Seek(lowerBound, exact: true);
+                    return;
                 }
-            }
-            else // playing backward (PingPong)
-            {
-                if (pos <= lowerBound || pos <= 0.02)
+                else // Once (NoLoop)
                 {
-                    _playerA.SetPlayDirection(true);
-                    Seek(lowerBound + 0.02, exact: false);
+                    Pause();
+                    Seek(upperBound, exact: true);
                     return;
                 }
             }
@@ -233,6 +208,15 @@ public class PlaybackCoordinator : IDisposable
 
     public void TogglePlayPause()
     {
+        if (_playerA.IsEnded || (_playerA.Duration > 0 && _playerA.TimePos >= _playerA.Duration - 0.08))
+        {
+            double restartPos = LoopStart ?? 0.0;
+            _playerA.SetPlayDirection(true);
+            Seek(restartPos, exact: true);
+            Play();
+            return;
+        }
+
         if (IsPlaying) Pause();
         else Play();
     }

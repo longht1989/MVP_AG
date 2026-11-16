@@ -413,7 +413,11 @@ public class MpvPlayer : IDisposable
             _disposed = true;
             try
             {
-                _client?.Dispose();
+                if (_client != null)
+                {
+                    try { _client.CommandString("stop"); } catch { }
+                    _client.Dispose();
+                }
             }
             catch { }
             _client = null;

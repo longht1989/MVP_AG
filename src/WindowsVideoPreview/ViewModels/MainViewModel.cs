@@ -325,19 +325,11 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    public string LoopModeDisplayText => LoopMode switch
-    {
-        PlaybackLoopMode.Loop => "Loop",
-        PlaybackLoopMode.PingPong => "PingPong",
-        _ => "Once"
-    };
+    public string LoopModeDisplayText => LoopMode == PlaybackLoopMode.Loop ? "Loop" : "Once";
 
-    public string LoopModeToolTip => LoopMode switch
-    {
-        PlaybackLoopMode.Loop => "Loop Mode: Repeat Forever [Ctrl+L]",
-        PlaybackLoopMode.PingPong => "Loop Mode: Ping Pong (Forward / Backward) [Ctrl+L]",
-        _ => "Loop Mode: Play Once [Ctrl+L]"
-    };
+    public string LoopModeToolTip => LoopMode == PlaybackLoopMode.Loop
+        ? "Loop Mode: Repeat Forever [Ctrl+L]"
+        : "Loop Mode: Play Once [Ctrl+L]";
 
     private string _timeDisplayFormat = "Timecode";
     public string TimeDisplayFormat
@@ -356,8 +348,17 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    public bool IsTimecodeMode => TimeDisplayFormat == "Timecode";
-    public bool IsFrameMode => TimeDisplayFormat == "Frames";
+    public bool IsTimecodeMode
+    {
+        get => TimeDisplayFormat == "Timecode";
+        set { if (value) TimeDisplayFormat = "Timecode"; }
+    }
+
+    public bool IsFrameMode
+    {
+        get => TimeDisplayFormat == "Frames";
+        set { if (value) TimeDisplayFormat = "Frames"; }
+    }
 
     private string _currentPlayheadText = "00:00:00.000";
     private string _totalDurationText = "00:00:00.000";
@@ -512,13 +513,7 @@ public class MainViewModel : ViewModelBase
         ToggleFullscreenCommand = new RelayCommand(() => IsFullscreen = !IsFullscreen);
         CycleLoopModeCommand = new RelayCommand(() =>
         {
-            LoopMode = LoopMode switch
-            {
-                PlaybackLoopMode.NoLoop => PlaybackLoopMode.Loop,
-                PlaybackLoopMode.Loop => PlaybackLoopMode.PingPong,
-                PlaybackLoopMode.PingPong => PlaybackLoopMode.NoLoop,
-                _ => PlaybackLoopMode.NoLoop
-            };
+            LoopMode = LoopMode == PlaybackLoopMode.NoLoop ? PlaybackLoopMode.Loop : PlaybackLoopMode.NoLoop;
         });
         SetTimeFormatCommand = new RelayCommand(param =>
         {

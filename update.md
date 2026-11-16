@@ -353,3 +353,100 @@ Theo yêu cầu mới của người dùng và thiết kế từ ảnh chụp đ
   - Nút mở nhanh `⌨ Shortcuts` trên thanh Top Bar và click vào dòng Shortcuts ở chân trang.
 - [x] **Kiểm thử tự động:** 39/39 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã build và publish thành công ra `bin\publish\LumiePlayer.exe`.
+
+
+---
+
+## 12. Kế Hoạch Sửa Lỗi Chi Tiết & Tinh Chỉnh Trải Nghiệm Người Dùng (v1.7.1)
+
+### 1. Mục Tiêu Cập Nhật
+Dựa trên phản hồi và các ảnh chụp lỗi của người dùng:
+1. **Sửa lỗi crash khi click chuột phải vào Timeline (`IsTimecodeMode` Read-Only Binding):**
+   - Lỗi: `A TwoWay or OneWayToSource binding cannot work on the read-only property 'IsTimecodeMode'`.
+   - Nguyên nhân: `MenuItem.IsChecked` mặc định là TwoWay binding nhưng `IsTimecodeMode` và `IsFrameMode` trong ViewModel đang là get-only property (`=>`).
+   - Khắc phục: Bổ sung setter cho cả `IsTimecodeMode` và `IsFrameMode`, đồng thời thiết lập `Mode=TwoWay` hoặc `Mode=OneWay` rõ ràng trong XAML.
+2. **Khắc phục lỗi phím Space khi video kết thúc (Space to Replay at EOF):**
+   - Đảm bảo khi video chạm mốc kết thúc (`IsEnded` hoặc `TimePos >= Duration - 0.05s`), nhấn phím `Space` sẽ luôn tua video về đầu (`0.0s` hoặc điểm `LoopStart` nếu đang set loop) và tiếp tục phát ngay lập tức.
+3. **Loại bỏ chế độ Ping Pong:**
+   - Rút gọn hệ thống lặp chỉ còn 2 trạng thái chuyên nghiệp và thân thiện: `Once` (Phát 1 lần rồi dừng) và `Loop` (Lặp vô tận).
+   - Nút bấm trên Transport Bar chuyển đổi giữa 2 icon `Once` và `Loop`, phím tắt `Ctrl+L` xoay vòng giữa 2 chế độ này.
+4. **Hỗ trợ Loop / Once cho Timeline tổng (Toàn bộ video):**
+   - Khi người dùng **không** chọn đoạn loop A-B:
+     - Nếu bật `Loop`: Khi phát hết video, tự động tua về `0.0s` và tiếp tục phát lặp lại liên tục.
+     - Nếu bật `Once`: Phát đến hết video thì dừng lại ở frame cuối cùng.
+   - Khi người dùng **có** chọn đoạn loop A-B:
+     - Áp dụng phạm vi lặp trong khoảng từ mốc In A đến mốc Out B.
+5. **Ưu tiên tuyệt đối phím Space cho Play/Pause (Không bị kẹt toggle nút vừa click):**
+   - Nguyên nhân: WPF mặc định giữ keyboard focus trên Button sau khi click chuột. Khi người dùng bấm Space, Windows coi đó là hành vi "ấn nút đang focus" dẫn đến việc toggle nút đó thay vì Play/Pause.
+   - Khắc phục: 
+     - Trong `OnWindowPreviewKeyDown`: Đánh chặn phím `Space` ở mức Window (`e.Handled = true`) và kích hoạt trực tiếp `_vm.PlayPauseCommand.Execute(null)` trừ khi đang gõ phím trong `TextBox`.
+     - Sau khi người dùng click chuột vào bất kỳ Button nào, tự động xóa focus về Window (`Keyboard.ClearFocus()`).
+     - Người dùng vẫn có thể dùng phím `Tab` để di chuyển focus giữa các nút (với viền highlight nhận diện rõ ràng) và kích hoạt bằng phím `Enter`.
+6. **Điều chỉnh màu sắc hiển thị Context Menu chuột phải (Khắc phục lỗi nền trắng nham nhở):**
+   - Thiết kế `ModernStudioContextMenu` và `ModernStudioMenuItem` trong `App.xaml`:
+     - Nền menu tối màu Studio `#18181D`, viền `#3A3A4A`, bo góc 6px.
+     - Loại bỏ hoàn toàn cột icon gutter màu trắng của WPF mặc định.
+     - Chữ màu trắng sáng `#F4F4F6`, khi hover đổi nền xám `#252530`.
+     - Mục đang chọn hiển thị dấu tích checkmark `✓` màu xanh cyan `{StaticResource BrushAccent}` nổi bật.
+7. **Cố định kích thước cụm Timecode/Frame để Timeline không bị co giãn giật cục:**
+   - Cố định chiều rộng cột Timecode A (`Width="240"`) với căn trái mượt mà, đủ sức chứa toàn bộ chuỗi ký tự dài nhất `00:00:00.000 [Frame: 999999 / 999999]`.
+   - Cố định chiều rộng cột thông số so sánh / tổng thời lượng bên phải (`Width="160"`).
+   - Giúp thanh trượt Timeline (`Column 1`) luôn có chiều rộng ổn định 100%, không bao giờ bị rung giật hay co giãn khi video đang chạy.
+8. **Đóng cửa sổ Inspector bằng phím Esc:**
+   - Trong `MetadataDialog.xaml`, thêm bắt sự kiện phím `Key.Escape` để đóng cửa sổ ngay lập tức khi nhấn `Esc`.
+
+---
+
+### 2. Kế Hoạch Triển Khai Chi Tiết
+
+1. **Sửa `MainViewModel.cs` & `PlaybackCoordinator.cs`:**
+   - Thêm setter cho `IsTimecodeMode` và `IsFrameMode` để loại bỏ lỗi crash TwoWay binding.
+   - Cập nhật enum `PlaybackLoopMode` thành `NoLoop` (Once) và `Loop`, loại bỏ `PingPong`.
+   - Logic `OnPlayerATimePosChanged` & `OnPlayerAFileEnded`: Nếu không có loop A-B, khi đến cuối video tự động `Seek(0)` và `Play()` nếu chế độ là `Loop`.
+   - Logic `TogglePlayPause`: Kiểm tra chặt chẽ `IsEnded || TimePos >= Duration - 0.05s`, tự động tua về đầu và gọi `Play()`.
+2. **Sửa `App.xaml` (ContextMenu Dark Studio Style):**
+   - Viết trọn bộ template cho `ContextMenu` và `MenuItem` (xóa cột trắng, chữ trắng, dấu check cyan).
+3. **Sửa `MainWindow.xaml`:**
+   - Cố định `Width="240"` cho cột Timecode A và `Width="160"` cho cột thông tin bên phải.
+   - Áp dụng `ModernStudioContextMenu` cho Timeline và Timecode button.
+   - Cập nhật nút Loop Mode chỉ hiển thị 2 trạng thái `Once` và `Loop`.
+4. **Sửa `MainWindow.xaml.cs`:**
+   - Đánh chặn phím `Space` độc quyền cho Play/Pause trong `OnWindowPreviewKeyDown` (bỏ qua nếu là TextBox).
+   - Giải phóng focus sau click button để tránh tình trạng phím Space toggle nút cũ.
+5. **Sửa `MetadataDialog.xaml` & `MetadataDialog.xaml.cs`:**
+   - Bổ sung hotkey `Esc` đóng Inspector.
+6. **Kiểm thử tự động & Đóng gói:**
+   - Chạy test suite `dotnet run --project tests\WindowsVideoPreview.Tests\WindowsVideoPreview.Tests.csproj`.
+   - Đóng gói ra `bin/publish/LumiePlayer.exe`.
+   - Đẩy code lên GitHub repository `origin main`.
+
+
+---
+
+## 13. Kết Quả Triển Khai & Nghiệm Thu (v1.7.1)
+- [x] **Khắc phục triệt để lỗi crash khi click chuột phải vào Timeline:**
+  - Bổ sung setter cho `IsTimecodeMode` và `IsFrameMode` trong `MainViewModel.cs`.
+  - Chỉ định rõ ràng `Mode=OneWay` trên Context Menu ở cả `TimelineGrid` và nút Timecode A.
+- [x] **Sửa lỗi phím Space phát lại từ đầu khi video kết thúc (Space to Replay at EOF):**
+  - Trong `PlaybackCoordinator.TogglePlayPause()` và `Play()`, kiểm tra điều kiện kết thúc `IsEnded || TimePos >= Duration - 0.08s`: tự động tua về đầu (`0.0s` hoặc `LoopStart`) và tiếp tục phát ngay lập tức.
+- [x] **Loại bỏ tính năng Ping Pong:**
+  - Enum `PlaybackLoopMode` rút gọn chỉ còn 2 chế độ: `NoLoop` (Once) và `Loop`.
+  - Nút chuyển trạng thái trên Transport Bar và phím tắt `Ctrl+L` chỉ xoay vòng giữa `Once` và `Loop`.
+- [x] **Tính năng Loop / Once hoạt động chuẩn xác cho toàn bộ video (khi không chọn loop A-B):**
+  - Khi không đặt loop A-B, nếu bật `Loop`: video chạy đến hết sẽ tự động tua về `0.0s` và tiếp tục phát lặp lại vô tận. Nếu ở `Once`, video dừng lại ở cuối.
+- [x] **Ưu tiên tuyệt đối phím Space cho lệnh Play/Pause:**
+  - Trong `OnWindowPreviewKeyDown`, đánh chặn độc quyền phím `Space` (`e.Handled = true`) và gọi `PlayPauseCommand`, ngăn không cho Windows chuyển lệnh Space vào button vừa được click chuột.
+  - Tự động xóa focus khỏi các button sau khi click chuột (`FocusManager.SetFocusedElement(this, this)`).
+  - Người dùng có thể dùng phím `Tab` để di chuyển focus đến button mong muốn và nhấn `Enter` để kích hoạt.
+- [x] **Màu sắc Context Menu chuột phải chuẩn Studio Dark:**
+  - Xây dựng `ModernStudioContextMenu` và `ModernStudioMenuItem` trong `App.xaml`:
+    + Nền tối Studio `#18181D`, viền `#3A3A4A`, bo góc 6px.
+    + Loại bỏ hoàn toàn cột icon gutter màu trắng của WPF.
+    + Chữ trắng sáng `#F4F4F6`, hover nền xám `#252530`, mục đang chọn có dấu tích `✓` màu xanh cyan `{StaticResource BrushAccent}`.
+- [x] **Cố định kích thước cụm Timecode/Frame, chống giật co giãn Timeline:**
+  - Cố định cột Timecode A `Width="240"` và cột bên phải `Width="160"`.
+  - Thanh trượt Timeline (`Column 1`) luôn giữ kích thước cố định 100%, không bị co giãn giật cục khi số frame tăng độ dài ký tự.
+- [x] **Đóng cửa sổ Inspector bằng phím Esc:**
+  - Gán `IsCancel="True"` cho nút Close và bắt sự kiện `PreviewKeyDown` phím `Key.Escape` trong `MetadataDialog.xaml.cs`.
+- [x] **Kiểm thử tự động:** 39/39 test cases PASS (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và publish bản sửa lỗi mới nhất ra `bin\publish\LumiePlayer.exe`.

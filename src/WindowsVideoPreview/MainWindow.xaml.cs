@@ -233,6 +233,16 @@ public partial class MainWindow : Window
         _waveformService.CancelCurrent();
     }
 
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseDown(e);
+        // Clear keyboard focus from buttons when clicking with mouse
+        if (!(e.OriginalSource is TextBox))
+        {
+            FocusManager.SetFocusedElement(this, this);
+        }
+    }
+
     private void OnWindowPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         // Don't intercept typing in textboxes
@@ -255,6 +265,25 @@ public partial class MainWindow : Window
             PlayerBControl.SetWindowOpacity(0.0);
             e.Handled = true;
             return;
+        }
+
+        // Space key always executes Play/Pause (never trapped by clicked buttons)
+        if (key == Key.Space && mods == ModifierKeys.None)
+        {
+            _vm.PlayPauseCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        // Enter key activates currently focused button if user navigated via Tab
+        if (key == Key.Enter && FocusManager.GetFocusedElement(this) is System.Windows.Controls.Primitives.ButtonBase focusedBtn)
+        {
+            if (focusedBtn.Command != null && focusedBtn.Command.CanExecute(focusedBtn.CommandParameter))
+            {
+                focusedBtn.Command.Execute(focusedBtn.CommandParameter);
+                e.Handled = true;
+                return;
+            }
         }
 
         // Match against HotkeyManager

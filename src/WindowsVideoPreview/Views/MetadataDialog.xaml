@@ -76,7 +76,7 @@
         </TabControl>
 
         <Button Grid.Row="2" Content="Close" Width="100" HorizontalAlignment="Right" Margin="0,14,0,0"
-                Style="{StaticResource ControlBtn}"
+                Style="{StaticResource ControlBtn}" IsCancel="True"
                 Click="OnCloseClick"/>
     </Grid>
 </Window>

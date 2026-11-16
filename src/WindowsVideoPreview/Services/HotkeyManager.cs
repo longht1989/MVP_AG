@@ -45,7 +45,7 @@ public class HotkeyManager
 
         // Playback
         AddBinding(Actions.PlayPause, "Play / Pause", "Playback", Key.Space, ModifierKeys.None);
-        AddBinding(Actions.ToggleLoopMode, "Cycle Loop Mode (Once / Loop / PingPong)", "Playback", Key.L, ModifierKeys.Control);
+        AddBinding(Actions.ToggleLoopMode, "Toggle Loop Mode (Once / Loop)", "Playback", Key.L, ModifierKeys.Control);
 
         // Navigation
         AddBinding(Actions.FrameStepBackward, "Step 1 Frame Backward", "Navigation", Key.Left, ModifierKeys.None);
