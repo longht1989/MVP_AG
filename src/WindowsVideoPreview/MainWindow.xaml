@@ -381,7 +381,7 @@
                 <!-- TIMELINE SLIDER + TIMECODES ROW -->
                 <Grid Margin="0,2,0,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="240"/>
+                        <ColumnDefinition Width="295"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="160"/>
                     </Grid.ColumnDefinitions>
@@ -396,8 +396,8 @@
                             </ContextMenu>
                         </Button.ContextMenu>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding TimecodeA}" FontFamily="Consolas, monospace" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}"/>
-                            <TextBlock Text="{Binding FrameTextA, StringFormat='  [{0}]'}" FontFamily="Consolas, monospace" FontSize="12" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PrimaryTimeTextA}" FontFamily="Consolas, monospace" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}"/>
+                            <TextBlock Text="{Binding SecondaryTimeTextA, StringFormat='  {0}'}" FontFamily="Consolas, monospace" FontSize="12" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -463,8 +463,8 @@
                                 Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="B: " Foreground="{StaticResource BrushStatusWarning}" FontWeight="Bold" FontSize="11"/>
-                                <TextBlock Text="{Binding TimecodeB}" FontFamily="Consolas, monospace" FontSize="13" Foreground="#FDE047"/>
-                                <TextBlock Text="{Binding FrameTextB, StringFormat='  ({0})'}" FontFamily="Consolas, monospace" FontSize="11" Foreground="{StaticResource BrushTextMuted}"/>
+                                <TextBlock Text="{Binding PrimaryTimeTextB}" FontFamily="Consolas, monospace" FontSize="13" Foreground="#FDE047"/>
+                                <TextBlock Text="{Binding SecondaryTimeTextB, StringFormat='  {0}'}" FontFamily="Consolas, monospace" FontSize="11" Foreground="{StaticResource BrushTextMuted}"/>
                             </StackPanel>
                         </Border>
 

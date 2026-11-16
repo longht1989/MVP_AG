@@ -226,6 +226,41 @@ class Program
         Assert("LoopMode persistence", reloaded.LoopMode == "Loop", reloaded.LoopMode);
         Assert("CustomHotkeys persistence", reloaded.CustomHotkeys.ContainsKey(HotkeyManager.Actions.PlayPause) && reloaded.CustomHotkeys[HotkeyManager.Actions.PlayPause] == "K");
 
+        // 8. Test Video Zoom Engine
+        Console.WriteLine("\n--- Testing Video Zoom Engine ---");
+        using (var zoomPlayer = new MpvPlayer())
+        {
+            Assert("Initial ZoomFactor is 100%", Math.Abs(zoomPlayer.ZoomFactor - 1.0) < 0.001);
+            zoomPlayer.AdjustZoom(1.15);
+            Assert("Zoom In increases factor", zoomPlayer.ZoomFactor > 1.0, $"ZoomFactor: {zoomPlayer.ZoomFactor}");
+            zoomPlayer.ResetZoom();
+            Assert("ResetZoom restores 100%", Math.Abs(zoomPlayer.ZoomFactor - 1.0) < 0.001);
+            zoomPlayer.AdjustZoom(1.0 / 1.15);
+            Assert("Zoom Out decreases factor", zoomPlayer.ZoomFactor < 1.0, $"ZoomFactor: {zoomPlayer.ZoomFactor}");
+        }
+
+        // 9. Test Timecode / Frame Visual Swap
+        Console.WriteLine("\n--- Testing Timecode / Frame Visual Swap ---");
+        using (var dummyA = new MpvPlayer())
+        using (var dummyB = new MpvPlayer())
+        {
+            var coord = new PlaybackCoordinator(dummyA, dummyB);
+            var ffmpegSvc = new FfmpegService();
+            var wfSvc = new WaveformService(ffmpegSvc);
+            var setSvc = new SettingsService();
+            var vm = new MainViewModel(coord, ffmpegSvc, wfSvc, setSvc);
+
+            vm.Position = 125.091; // 2m 5s 91ms
+
+            vm.TimeDisplayFormat = "Timecode";
+            Assert("Timecode Mode Primary is Timecode", vm.PrimaryTimeTextA.StartsWith("00:02:05"), vm.PrimaryTimeTextA);
+            Assert("Timecode Mode Secondary contains Frame", vm.SecondaryTimeTextA.Contains("Frame"), vm.SecondaryTimeTextA);
+
+            vm.TimeDisplayFormat = "Frames";
+            Assert("Frames Mode Primary is Frame", vm.PrimaryTimeTextA.StartsWith("Frame"), vm.PrimaryTimeTextA);
+            Assert("Frames Mode Secondary contains Timecode", vm.SecondaryTimeTextA.Contains("00:02:05"), vm.SecondaryTimeTextA);
+        }
+
         Console.WriteLine("\n==================================================");
         Console.WriteLine($"  TEST RESULTS: {passed} PASSED, {failed} FAILED");
         Console.WriteLine("==================================================");

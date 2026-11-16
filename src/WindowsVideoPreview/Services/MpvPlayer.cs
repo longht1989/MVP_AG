@@ -17,6 +17,7 @@ public class MpvPlayer : IDisposable
     public event Action<double>? FpsChanged;
     public event Action? FileLoaded;
     public event Action? FileEnded;
+    public event Action<double>? ZoomChanged;
 
     public double TimePos { get; private set; }
     public double Duration { get; private set; }
@@ -26,6 +27,7 @@ public class MpvPlayer : IDisposable
     public long TotalFrames => (Fps > 0 && Duration > 0) ? (long)Math.Round(Duration * Fps) : 0;
     public bool IsLoaded { get; private set; }
     public bool IsEnded { get; private set; }
+    public double ZoomFactor { get; private set; } = 1.0;
     public string CurrentFilePath { get; private set; } = string.Empty;
 
     public void Initialize(IntPtr hwnd)
@@ -60,6 +62,7 @@ public class MpvPlayer : IDisposable
             _client.ObserveProperty("duration", 2);
             _client.ObserveProperty("pause", 3);
             _client.ObserveProperty("estimated-vf-fps", 4);
+            _client.ObserveProperty("eof-reached", 5);
         }
     }
 
@@ -173,6 +176,22 @@ public class MpvPlayer : IDisposable
                     }
                     catch { }
                     break;
+                case "eof-reached":
+                    try
+                    {
+                        _client.GetProperty("eof-reached", out bool eof);
+                        if (eof)
+                        {
+                            IsEnded = true;
+                            FileEnded?.Invoke();
+                        }
+                        else
+                        {
+                            IsEnded = false;
+                        }
+                    }
+                    catch { }
+                    break;
             }
         }
         catch { }
@@ -186,7 +205,53 @@ public class MpvPlayer : IDisposable
             CurrentFilePath = filePath;
             IsLoaded = false;
             IsEnded = false;
+            ResetZoom();
             _client.CommandString($"loadfile \"{filePath.Replace("\\", "/")}\" replace");
+        }
+    }
+
+    public void AdjustZoom(double stepMultiplier)
+    {
+        lock (_lock)
+        {
+            double newFactor = Math.Clamp(ZoomFactor * stepMultiplier, 0.25, 5.0);
+            ZoomFactor = Math.Round(newFactor, 3);
+            if (_client != null)
+            {
+                double log2Zoom = Math.Log2(ZoomFactor);
+                SafeSetProperty("video-zoom", log2Zoom.ToString(CultureInfo.InvariantCulture));
+            }
+            ZoomChanged?.Invoke(ZoomFactor);
+        }
+    }
+
+    public void SetZoomFactor(double factor)
+    {
+        lock (_lock)
+        {
+            double newFactor = Math.Clamp(factor, 0.25, 5.0);
+            ZoomFactor = Math.Round(newFactor, 3);
+            if (_client != null)
+            {
+                double log2Zoom = Math.Log2(ZoomFactor);
+                SafeSetProperty("video-zoom", log2Zoom.ToString(CultureInfo.InvariantCulture));
+            }
+            ZoomChanged?.Invoke(ZoomFactor);
+        }
+    }
+
+    public void ResetZoom()
+    {
+        lock (_lock)
+        {
+            ZoomFactor = 1.0;
+            if (_client != null)
+            {
+                SafeSetProperty("video-zoom", "0");
+                SafeSetProperty("video-pan-x", "0");
+                SafeSetProperty("video-pan-y", "0");
+            }
+            ZoomChanged?.Invoke(1.0);
         }
     }
 

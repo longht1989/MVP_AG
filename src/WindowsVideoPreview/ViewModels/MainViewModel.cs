@@ -59,6 +59,10 @@ public class MainViewModel : ViewModelBase
     private string _timecodeB = "00:00:00.000";
     private string _frameTextA = "Frame: 0 / 0";
     private string _frameTextB = "Frame: 0 / 0";
+    private string _primaryTimeTextA = "00:00:00.000";
+    private string _secondaryTimeTextA = "[Frame: 0 / 0]";
+    private string _primaryTimeTextB = "00:00:00.000";
+    private string _secondaryTimeTextB = "[Frame: 0 / 0]";
     private string _statusMessage = "Ready";
 
     private float[] _waveformData = Array.Empty<float>();
@@ -383,6 +387,30 @@ public class MainViewModel : ViewModelBase
     }
 
     public HotkeyManager HotkeyManager { get; } = new();
+
+    public string PrimaryTimeTextA
+    {
+        get => _primaryTimeTextA;
+        set => SetProperty(ref _primaryTimeTextA, value);
+    }
+
+    public string SecondaryTimeTextA
+    {
+        get => _secondaryTimeTextA;
+        set => SetProperty(ref _secondaryTimeTextA, value);
+    }
+
+    public string PrimaryTimeTextB
+    {
+        get => _primaryTimeTextB;
+        set => SetProperty(ref _primaryTimeTextB, value);
+    }
+
+    public string SecondaryTimeTextB
+    {
+        get => _secondaryTimeTextB;
+        set => SetProperty(ref _secondaryTimeTextB, value);
+    }
 
     public string TimecodeA
     {
@@ -800,14 +828,24 @@ public class MainViewModel : ViewModelBase
         long currentB = fpsB > 0 ? (long)Math.Floor(posB * fpsB) : 0;
         FrameTextB = totalB > 0 ? $"Frame: {currentB} / {totalB}" : $"Frame: {currentB}";
 
-        // Timeline Floating Playhead & Metric Tracking
+        // Format-dependent Primary & Secondary swapping
         if (IsFrameMode)
         {
+            PrimaryTimeTextA = totalA > 0 ? $"Frame: {currentA} / {totalA}" : $"Frame: {currentA}";
+            SecondaryTimeTextA = $"[{TimecodeA}]";
+            PrimaryTimeTextB = totalB > 0 ? $"Frame: {currentB} / {totalB}" : $"Frame: {currentB}";
+            SecondaryTimeTextB = $"[{TimecodeB}]";
+
             CurrentPlayheadText = $"{Math.Max(0, currentA)}";
             TotalDurationText = totalA > 0 ? $"{totalA} frames" : "0 frames";
         }
         else
         {
+            PrimaryTimeTextA = TimecodeA;
+            SecondaryTimeTextA = totalA > 0 ? $"[Frame: {currentA} / {totalA}]" : $"[Frame: {currentA}]";
+            PrimaryTimeTextB = TimecodeB;
+            SecondaryTimeTextB = totalB > 0 ? $"[Frame: {currentB} / {totalB}]" : $"[Frame: {currentB}]";
+
             CurrentPlayheadText = FormatTimecode(posA);
             TotalDurationText = FormatTimecode(Duration);
         }

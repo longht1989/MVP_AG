@@ -56,6 +56,10 @@
                     <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
                         <TextBlock x:Name="FpsBadge" Text="60 fps" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
                     </Border>
+                    <Border x:Name="ZoomBadge" Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0"
+                            ToolTip="Current Zoom Level. Click to reset to 100%" Cursor="Hand" MouseDown="OnZoomBadgeMouseDown" Visibility="Collapsed">
+                        <TextBlock x:Name="ZoomBadgeText" Text="100%" FontSize="11" Foreground="{StaticResource BrushAccentActive}" FontWeight="SemiBold"/>
+                    </Border>
                     <Button x:Name="CloseButton" Width="22" Height="22" Padding="0"
                             Background="Transparent" BorderThickness="0" Cursor="Hand"
                             Visibility="Collapsed" Click="OnCloseClick" ToolTip="Close Video B">
@@ -73,6 +77,16 @@
                            FontSize="13" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0,0,10,0"/>
                 <TextBlock x:Name="FrameCountText" Text="Frame: 0" FontFamily="Consolas, monospace" 
                            FontSize="11" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Zoom Level Toast HUD Overlay -->
+        <Border x:Name="ZoomToast" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#DD101015" BorderBrush="{StaticResource BrushAccent}" BorderThickness="1.5"
+                CornerRadius="8" Padding="14,8" Visibility="Collapsed" IsHitTestVisible="False">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Path Data="{StaticResource IconFullscreen}" Width="14" Height="14" Fill="{StaticResource BrushAccent}" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="ZoomToastText" Text="Zoom: 100%" FontFamily="Consolas, monospace" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 

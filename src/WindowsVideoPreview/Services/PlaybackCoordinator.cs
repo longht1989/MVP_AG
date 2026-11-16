@@ -89,11 +89,13 @@ public class PlaybackCoordinator : IDisposable
 
         if (upperBound > lowerBound && _playerA.IsLoaded)
         {
-            if (pos >= upperBound)
+            double threshold = hasLoopAB ? 0.0 : Math.Max(0.08, 1.0 / (_playerA.Fps > 0 ? _playerA.Fps : 30.0));
+            if (pos >= upperBound - threshold)
             {
                 if (LoopMode == PlaybackLoopMode.Loop)
                 {
                     Seek(lowerBound, exact: true);
+                    Play();
                     return;
                 }
                 else // Once (NoLoop)

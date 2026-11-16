@@ -13,6 +13,8 @@ namespace WindowsVideoPreview.Views;
 public partial class VideoPlayerControl : System.Windows.Controls.UserControl
 {
     private MpvPlayer? _player;
+    private System.Windows.Threading.DispatcherTimer? _zoomToastTimer;
+    private readonly WinFormsMouseWheelFilter _wheelFilter;
 
     public event Action<string>? FileDropped;
     public event Action? OpenRequested;
@@ -62,6 +64,32 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
     public VideoPlayerControl()
     {
         InitializeComponent();
+        _wheelFilter = new WinFormsMouseWheelFilter(this);
+        try
+        {
+            System.Windows.Forms.Application.AddMessageFilter(_wheelFilter);
+        }
+        catch { }
+
+        Unloaded += (_, _) =>
+        {
+            try
+            {
+                System.Windows.Forms.Application.RemoveMessageFilter(_wheelFilter);
+            }
+            catch { }
+        };
+
+        PreviewMouseWheel += OnWpfPreviewMouseWheel;
+
+        VideoPanel.MouseDoubleClick += (_, e) =>
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left && _player != null && Math.Abs(_player.ZoomFactor - 1.0) > 0.01)
+            {
+                Dispatcher.Invoke(() => ResetZoom());
+            }
+        };
+
         Loaded += (_, _) =>
         {
             if (FormsHost.Handle != IntPtr.Zero && _currentWipeRatio < 0.998)
@@ -81,6 +109,16 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
     public void AttachPlayer(MpvPlayer player)
     {
         _player = player;
+        _player.ZoomChanged += factor =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                int percent = (int)Math.Round(factor * 100);
+                ZoomBadgeText.Text = $"{percent}%";
+                ZoomBadge.Visibility = Math.Abs(factor - 1.0) > 0.01 ? Visibility.Visible : Visibility.Collapsed;
+            });
+        };
+
         if (VideoPanel.IsHandleCreated)
         {
             _player.Initialize(VideoPanel.Handle);
@@ -284,6 +322,107 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
         if (e.ClickCount == 2)
         {
             OpenRequested?.Invoke();
+        }
+    }
+
+    private void OnWpfPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            if (e.Delta > 0) ZoomIn();
+            else if (e.Delta < 0) ZoomOut();
+            e.Handled = true;
+        }
+    }
+
+    public void ZoomIn()
+    {
+        if (_player == null) return;
+        _player.AdjustZoom(1.15);
+        ShowZoomToast(_player.ZoomFactor);
+    }
+
+    public void ZoomOut()
+    {
+        if (_player == null) return;
+        _player.AdjustZoom(1.0 / 1.15);
+        ShowZoomToast(_player.ZoomFactor);
+    }
+
+    public void ResetZoom()
+    {
+        if (_player == null) return;
+        _player.ResetZoom();
+        ShowZoomToast(1.0);
+    }
+
+    private void ShowZoomToast(double factor)
+    {
+        int percent = (int)Math.Round(factor * 100);
+        ZoomToastText.Text = $"Zoom: {percent}%";
+        ZoomBadgeText.Text = $"{percent}%";
+        ZoomBadge.Visibility = Math.Abs(factor - 1.0) > 0.01 ? Visibility.Visible : Visibility.Collapsed;
+
+        ZoomToast.Visibility = Visibility.Visible;
+        if (_zoomToastTimer == null)
+        {
+            _zoomToastTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1200)
+            };
+            _zoomToastTimer.Tick += (_, _) =>
+            {
+                _zoomToastTimer.Stop();
+                ZoomToast.Visibility = Visibility.Collapsed;
+            };
+        }
+        _zoomToastTimer.Stop();
+        _zoomToastTimer.Start();
+    }
+
+    private void OnZoomBadgeMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        ResetZoom();
+        e.Handled = true;
+    }
+
+    private class WinFormsMouseWheelFilter : System.Windows.Forms.IMessageFilter
+    {
+        private readonly VideoPlayerControl _control;
+        public WinFormsMouseWheelFilter(VideoPlayerControl control) => _control = control;
+
+        public bool PreFilterMessage(ref System.Windows.Forms.Message m)
+        {
+            const int WM_MOUSEWHEEL = 0x020A;
+            if (m.Msg == WM_MOUSEWHEEL)
+            {
+                bool isCtrl = (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Control) == System.Windows.Forms.Keys.Control ||
+                              (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+                if (isCtrl)
+                {
+                    try
+                    {
+                        var panel = _control.VideoPanel;
+                        if (panel != null && panel.IsHandleCreated)
+                        {
+                            var screenPt = System.Windows.Forms.Cursor.Position;
+                            var clientPt = panel.PointToClient(screenPt);
+                            if (panel.ClientRectangle.Contains(clientPt))
+                            {
+                                int delta = (short)((m.WParam.ToInt64() >> 16) & 0xFFFF);
+                                _control.Dispatcher.Invoke(() =>
+                                {
+                                    if (delta > 0) _control.ZoomIn();
+                                    else if (delta < 0) _control.ZoomOut();
+                                });
+                                return true;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            return false;
         }
     }
 }

@@ -450,3 +450,100 @@ Dựa trên phản hồi và các ảnh chụp lỗi của người dùng:
   - Gán `IsCancel="True"` cho nút Close và bắt sự kiện `PreviewKeyDown` phím `Key.Escape` trong `MetadataDialog.xaml.cs`.
 - [x] **Kiểm thử tự động:** 39/39 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã build và publish bản sửa lỗi mới nhất ra `bin\publish\LumiePlayer.exe`.
+
+---
+
+## 14. Kế Hoạch Kiểm Tra & Sửa Lỗi Loop Global, Hoán Đổi Hiển Thị Timecode/Frame, Bổ Sung Zoom Video (v1.7.2)
+
+### 1. Phân Tích Nguyên Nhân & Mục Tiêu
+
+1. **Khắc phục triệt để tính năng Loop Global (Toàn bộ video) chưa hoạt động:**
+   - **Nguyên nhân cốt lõi:**
+     - Ứng dụng cấu hình MPV với `keep-open=always`. Với tùy chọn này, khi phát đến hết file, MPV giữ nguyên frame cuối cùng và KHÔNG phát sinh sự kiện `MPV_EVENT_END_FILE` (sự kiện mà `_client.FileEnded` đang lắng nghe).
+     - Đồng thời, vị trí thời gian `time-pos` của MPV khi chạm frame cuối sẽ dừng lại ở Presentation Timestamp (PTS) của frame cuối (ví dụ $9.9667\text{s}$ trên video $10.000\text{s}$). Vì vậy điều kiện `pos >= upperBound` (với `upperBound = Duration = 10.000s`) **không bao giờ đạt được**, khiến logic loop trong `OnPlayerATimePosChanged` bị bỏ qua.
+     - Khi `pos >= upperBound` trước đó được kích hoạt, hàm chỉ gọi `Seek(lowerBound)` nhưng quên gọi `Play()`, dẫn đến video bị tạm dừng ở frame đầu thay vì phát tiếp tục.
+   - **Giải pháp:**
+     - Trong `MpvPlayer.cs`: Đăng ký quan sát thuộc tính `eof-reached` (`_client.ObserveProperty("eof-reached", 5)`). Khi MPV chạm mốc kết thúc file, thuộc tính này chuyển thành `true`. Lúc này lập tức kích hoạt sự kiện `FileEnded` / `EofReached`.
+     - Trong `PlaybackCoordinator.cs`:
+       - Khi `LoopMode == PlaybackLoopMode.Loop`:
+         - Xử lý biên linh hoạt với ngưỡng `threshold = (LoopEnd == null) ? Math.Max(0.08, 1.0 / (_playerA.Fps > 0 ? _playerA.Fps : 30.0)) : 0.0`.
+         - Khi `pos >= upperBound - threshold`: tự động `Seek(lowerBound, exact: true)` và gọi ngay `Play()`.
+         - Khi nhận sự kiện `OnPlayerAFileEnded`: nếu `LoopMode == PlaybackLoopMode.Loop`, tự động `Seek(LoopStart ?? 0.0)` và gọi `Play()`.
+
+2. **Hoán đổi vị trí hiển thị (Swap Visual) giữa Timecode và Frame khi người dùng chuyển đổi:**
+   - **Yêu cầu người dùng & Quan sát ảnh thực tế (`media_1794804255915_69930378.png`):**
+     - Hiện tại văn bản lớn màu xanh Cyan luôn là Timecode (`00:02:05.091`), còn văn bản phụ nhỏ là Frame (`[Frame: 3749 / 5857]`). Khi chọn chế độ "Frames (#1234)", vị trí này vẫn giữ nguyên, chỉ thay đổi playhead trên slider.
+     - Đồng thời chuỗi dài bị cắt cụt đuôi (`[Frame: 3749 / !`) do cột 0 cố định `240px` là chưa đủ rộng cho định dạng đầy đủ.
+   - **Giải pháp:**
+     - Thiết lập 2 thuộc tính dữ liệu thông minh trong `MainViewModel.cs`:
+       - `PrimaryTimeText` (văn bản chính, cỡ lớn 18px, màu Cyan `{StaticResource BrushAccent}`).
+       - `SecondaryTimeText` (văn bản phụ, cỡ nhỏ 12px, màu xám nhạt `{StaticResource BrushTextMuted}`).
+     - Khi chọn **Timecode Mode**:
+       - `PrimaryTimeText = TimecodeA` (ví dụ `00:02:05.091`).
+       - `SecondaryTimeText = $"[{FrameTextA}]"` (ví dụ `[Frame: 3749 / 5857]`).
+     - Khi chọn **Frames Mode**:
+       - `PrimaryTimeText = $"Frame: {currentA} / {totalA}"` (hoặc `$"Frame: {currentA}"`, chữ to màu Cyan nổi bật).
+       - `SecondaryTimeText = $"[{TimecodeA}]"` (chữ phụ nhỏ trong ngoặc vuông).
+     - Điều chỉnh chiều rộng cột Timecode bên trái trong `MainWindow.xaml`: Nâng từ `Width="240"` lên `Width="295"`, giải quyết dứt điểm 100% hiện tượng tràn chuỗi ký tự.
+
+3. **Bổ sung tính năng Zoom In / Zoom Out trên video hiện tại (`Ctrl + Mouse Scroll Up/Down`):**
+   - **Yêu cầu:** Người dùng có thể giữ phím `Ctrl` và lăn chuột lên (Scroll Up) để phóng to (Zoom In), hoặc lăn chuột xuống (Scroll Down) để thu nhỏ (Zoom Out) trên khung video đang phát/hover.
+   - **Giải pháp kỹ thuật MPV Hardware-Accelerated:**
+     - MPV hỗ trợ trực tiếp thuộc tính `video-zoom` (thang log2: $0.0 = 100\%$, $1.0 = 200\%$, $-1.0 = 50\%$).
+     - Trong `MpvPlayer.cs`:
+       - Thêm thuộc tính `ZoomFactor` (mặc định $1.0 = 100\%$, giới hạn từ $0.25$ đến $5.0$).
+       - Hàm `AdjustZoom(double deltaFactor)`: tăng/giảm theo bước nhân/chia tỉ lệ mượt mà ($15\%$ mỗi nấc cuộn), tính toán `log2(ZoomFactor)` và cập nhật tức thì vào MPV qua `SafeSetProperty("video-zoom", ...)`.
+       - Hàm `ResetZoom()`: khôi phục `video-zoom = 0`, `video-pan-x = 0`, `video-pan-y = 0`.
+     - Trong `VideoPlayerControl.xaml` & `VideoPlayerControl.xaml.cs`:
+       - Bắt sự kiện cuộn chuột cả ở tầng WinForms `VideoPanel` (thông qua `IMessageFilter` WinForms để không bị trôi message qua HWND Airspace) và ở tầng WPF `PreviewMouseWheel`.
+       - Khi phát hiện `Ctrl` được nhấn: chặn sự kiện mặc định (`e.Handled = true`), tính toán delta và gọi `_player.AdjustZoom(...)`.
+       - Hiển thị HUD Overlay `ZoomPill` (Zoom Toast) sang trọng ở góc trên video: ví dụ `🔍 150%` hoặc `100%`, tự động mờ dần và biến mất sau 1.5 giây.
+       - Cho phép double-click hoặc click vào Badge để reset nhanh về `100%`.
+
+---
+
+### 2. Kế Hoạch Triển Khai Chi Tiết
+
+1. **Cập nhật `MpvPlayer.cs`:**
+   - Đăng ký `_client.ObserveProperty("eof-reached", 5)`.
+   - Bắt sự kiện `eof-reached` trong `OnPropertyChanged` để set `IsEnded = true` và gọi `FileEnded?.Invoke()`.
+   - Bổ sung `ZoomFactor`, sự kiện `ZoomChanged`, các phương thức `SetZoomFactor`, `AdjustZoom`, `ResetZoom`.
+2. **Cập nhật `PlaybackCoordinator.cs`:**
+   - Tối ưu hóa điều kiện phát hiện kết thúc video trong `OnPlayerATimePosChanged` với ngưỡng biên `threshold` thích ứng.
+   - Đảm bảo khi `LoopMode == PlaybackLoopMode.Loop`, gọi `Seek(lowerBound, exact: true)` kèm `Play()`.
+   - Bắt sự kiện `OnPlayerAFileEnded` để kích hoạt lặp tức thì khi nhận `eof-reached`.
+3. **Cập nhật `MainViewModel.cs`:**
+   - Thêm thuộc tính `PrimaryTimeText` và `SecondaryTimeText` tự động hoán đổi hiển thị dựa trên `IsTimecodeMode` / `IsFrameMode`.
+   - Đảm bảo gọi `OnPropertyChanged` cho cả 2 thuộc tính khi thời gian hoặc định dạng thay đổi.
+4. **Cập nhật `MainWindow.xaml`:**
+   - Mở rộng cột Timecode bên trái `Width="295"`.
+   - Ràng buộc hiển thị text to sang `PrimaryTimeText` và text nhỏ sang `SecondaryTimeText`.
+5. **Cập nhật `VideoPlayerControl.xaml` & `VideoPlayerControl.xaml.cs`:**
+   - Thêm HUD Overlay `ZoomPill` hiển thị mức phần trăm zoom.
+   - Cài đặt `IMessageFilter` và `PreviewMouseWheel` để bắt tổ hợp `Ctrl + MouseWheel`.
+   - Điều khiển phóng to / thu nhỏ mượt mà trên player tương ứng.
+6. **Kiểm thử tự động & Đóng gói:**
+   - Chạy test suite `dotnet test` bảo đảm 100% pass.
+   - Đóng gói ra `bin/publish/LumiePlayer.exe`.
+   - Cập nhật mục 15 kết quả nghiệm thu và push git lên repository.
+
+---
+
+## 15. Kết Quả Triển Khai & Nghiệm Thu (v1.7.2)
+- [x] **Khắc phục triệt để lỗi Loop Global (Lặp toàn bộ timeline):**
+  - Trong `MpvPlayer.cs`: Đã đăng ký lắng nghe thuộc tính `eof-reached` (`_client.ObserveProperty("eof-reached", 5)`). Khi phát đến frame cuối cùng với `keep-open=always`, thuộc tính này kích hoạt sự kiện `FileEnded`.
+  - Trong `PlaybackCoordinator.cs`: Bổ sung ngưỡng biên `threshold` thích ứng theo framerate `Math.Max(0.08, 1.0 / fps)`. Khi `pos >= upperBound - threshold` hoặc khi nhận `FileEnded` với `LoopMode == PlaybackLoopMode.Loop`, ứng dụng tự động `Seek(0.0)` và gọi `Play()`, phát lặp lại vô tận mượt mà không bao giờ bị đứng hình.
+- [x] **Hoán đổi vị trí hiển thị trực quan (Visual Swap) giữa Timecode và Frame:**
+  - Triển khai `PrimaryTimeText` (văn bản to màu Cyan, `FontSize=18`) và `SecondaryTimeText` (văn bản nhỏ màu xám nhạt, `FontSize=12`) trong `MainViewModel.cs`.
+  - Khi chọn **Timecode**: Text to hiển thị Timecode (ví dụ `00:02:05.091`), text phụ hiển thị `[Frame: 3749 / 5857]`.
+  - Khi chọn **Frames**: Text to lập tức chuyển sang hiển thị Frame (ví dụ `Frame: 3749 / 5857`), text phụ hiển thị `[00:02:05.091]`.
+  - Mở rộng cột Timecode bên trái `Width="295"`, chấm dứt hoàn toàn hiện tượng tràn chuỗi ký tự bị cắt cụt đuôi (`!`).
+  - Đồng bộ hoán đổi tương ứng trên cả Player A, Player B (ở chế độ Compare) và overlay góc dưới của video.
+- [x] **Tính năng Phóng to / Thu nhỏ Video (Zoom In / Out) mượt mà với `Ctrl + Mouse Scroll`:**
+  - Tận dụng cơ chế render phần cứng của MPV thông qua thuộc tính `video-zoom` (thang log2).
+  - Tích hợp `WinFormsMouseWheelFilter` (`IMessageFilter`) và WPF `PreviewMouseWheel` trong `VideoPlayerControl.xaml.cs`, bắt chính xác 100% thao tác lăn chuột kèm phím `Ctrl` ngay trên khung hình video.
+  - Mỗi nấc cuộn tăng/giảm $15\%$ tỉ lệ hiển thị (phạm vi từ $25\%$ đến $500\%$).
+  - Hiển thị HUD Toast `Zoom: 150%` ở trung tâm khung hình và tự động biến mất sau $1.2\text{s}$.
+  - Bổ sung Badge tỉ lệ zoom trên Top Header của video. Khi click chuột vào badge hoặc double-click vào video, zoom lập tức được reset về `100%`.
+- [x] **Kiểm thử tự động:** Mở rộng và chạy thành công 47/47 test cases PASS (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và publish bản phát hành hoàn thiện mới nhất ra `bin\publish\LumiePlayer.exe`.

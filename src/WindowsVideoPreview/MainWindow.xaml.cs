@@ -82,21 +82,21 @@ public partial class MainWindow : Window
         // Keep player control overlays up to date
         _vm.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(MainViewModel.TimecodeA) || e.PropertyName == nameof(MainViewModel.FrameTextA))
+            if (e.PropertyName == nameof(MainViewModel.PrimaryTimeTextA) || e.PropertyName == nameof(MainViewModel.SecondaryTimeTextA))
             {
-                PlayerAControl.UpdateTimecodeAndFrame(_vm.TimecodeA, _vm.FrameTextA);
+                PlayerAControl.UpdateTimecodeAndFrame(_vm.PrimaryTimeTextA, _vm.SecondaryTimeTextA);
             }
-            if (e.PropertyName == nameof(MainViewModel.TimecodeB) || e.PropertyName == nameof(MainViewModel.FrameTextB))
+            if (e.PropertyName == nameof(MainViewModel.PrimaryTimeTextB) || e.PropertyName == nameof(MainViewModel.SecondaryTimeTextB))
             {
-                PlayerBControl.UpdateTimecodeAndFrame(_vm.TimecodeB, _vm.FrameTextB);
+                PlayerBControl.UpdateTimecodeAndFrame(_vm.PrimaryTimeTextB, _vm.SecondaryTimeTextB);
             }
             if (e.PropertyName == nameof(MainViewModel.FileA) || e.PropertyName == nameof(MainViewModel.MetadataA))
             {
-                PlayerAControl.UpdateMediaInfo(_vm.FileA, _vm.MetadataA, _vm.TimecodeA, _vm.FrameTextA);
+                PlayerAControl.UpdateMediaInfo(_vm.FileA, _vm.MetadataA, _vm.PrimaryTimeTextA, _vm.SecondaryTimeTextA);
             }
             if (e.PropertyName == nameof(MainViewModel.FileB) || e.PropertyName == nameof(MainViewModel.MetadataB))
             {
-                PlayerBControl.UpdateMediaInfo(_vm.FileB, _vm.MetadataB, _vm.TimecodeB, _vm.FrameTextB);
+                PlayerBControl.UpdateMediaInfo(_vm.FileB, _vm.MetadataB, _vm.PrimaryTimeTextB, _vm.SecondaryTimeTextB);
             }
             if (e.PropertyName == nameof(MainViewModel.IsFullscreen))
             {
