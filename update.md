@@ -650,3 +650,52 @@ Dựa trên phản hồi và các ảnh chụp lỗi của người dùng:
   - Đăng ký chính thức 2 Action `JumpToStartOrLoopIn` và `JumpToEndOrLoopOut` trong `HotkeyManager`, cho phép người dùng tùy ý đổi phím tắt trong hộp thoại Shortcuts.
 - [x] **Kiểm thử tự động:** Mở rộng và chạy thành công **54/54 test cases PASS** (100% Green).
 - [x] **Đóng gói phát hành:** Đã build và publish bản phát hành hoàn thiện mới nhất ra [bin/publish/LumiePlayer.exe](file:///d:/LONGHT/AI/MVP_AG/bin/publish/LumiePlayer.exe).
+
+---
+
+## 18. Kế Hoạch Sửa Lỗi Crash Khi Click Chuột Phải Vào Video (v1.7.4)
+
+### 1. Phân Tích Nguyên Nhân Gốc Rễ
+Theo thông báo lỗi từ nhật ký `crash.log` và ảnh đính kèm của người dùng:
+```
+System.NullReferenceException: Object reference not set to an instance of an object.
+ ---> System.InvalidOperationException: A style intended for type 'MenuItem' cannot be applied to type 'Separator'.
+   at System.Windows.Controls.ItemsControl.ApplyItemContainerStyle(DependencyObject container, Object item)
+```
+- **Nguyên nhân chính:** 
+  1. Trong `App.xaml`, style `ModernStudioContextMenu` gán trực tiếp thuộc tính:
+     `<Setter Property="ItemContainerStyle" Value="{StaticResource ModernStudioMenuItem}"/>`
+     Vì `ItemContainerStyle` áp dụng cho **tất cả** các item bên trong `ContextMenu`, khi menu chứa phần tử `<Separator>` (phân cách dòng), WPF cố gắng ép style `ModernStudioMenuItem` (vốn có `TargetType="MenuItem"`) vào `Separator`.
+     Điều này làm bùng nổ ngoại lệ `InvalidOperationException: A style intended for type 'MenuItem' cannot be applied to type 'Separator'`.
+  2. Ngoại lệ này xảy ra ngay trong giai đoạn đo đạc giao diện (`MeasureOverride`) của cửa sổ Popup (`PopupRoot`), khiến cây hiển thị của Popup bị null và kéo theo `NullReferenceException` tại `Popup.OnWindowResize`.
+  3. Phương thức `OpenContextMenuAtCursor()` khi mở menu theo cách lập trình chưa gán tường minh `PlacementTarget = this`, và chưa tính toán tọa độ theo chuẩn DIPs của WPF.
+
+### 2. Giải Pháp Triển Khai
+1. **Sửa `App.xaml`:**
+   - Loại bỏ hoàn toàn `<Setter Property="ItemContainerStyle" .../>` khỏi `ModernStudioContextMenu`.
+   - Đưa việc định nghĩa style vào khối `<Style.Resources>` của `ModernStudioContextMenu`:
+     - `<Style TargetType="MenuItem" BasedOn="{StaticResource ModernStudioMenuItem}"/>`: Áp dụng cho toàn bộ `MenuItem`.
+     - `<Style TargetType="Separator">`: Định nghĩa style phân cách Studio 1px sang trọng với màu `{StaticResource BrushBorderSubtle}`, loại bỏ hoàn toàn việc ép kiểu sai sang `MenuItem`.
+   - Bổ sung `<ContentPresenter ContentSource="Icon"/>` vào `ModernStudioMenuItem` để hỗ trợ hiển thị icon mượt mà nếu có.
+2. **Sửa `VideoPlayerControl.xaml.cs`:**
+   - Trong `OpenContextMenuAtCursor()`: 
+     - Gán tường minh `ContextMenu.PlacementTarget = this;`.
+     - Sử dụng `PointFromScreen` chuyển đổi tọa độ con trỏ chuột Windows thành tọa độ WPF cục bộ, thiết lập `Placement = PlacementMode.RelativePoint`, `HorizontalOffset = wpfPt.X`, `VerticalOffset = wpfPt.Y`.
+     - Bọc xử lý an toàn để không bao giờ xảy ra lỗi không kiểm soát.
+3. **Kiểm thử tự động & Đóng gói:**
+   - Chạy test suite để bảo đảm tất cả test cases PASS.
+   - Publish ra `bin/publish/LumiePlayer.exe` và commit lên git repo.
+
+---
+
+## 19. Kết Quả Triển Khai & Nghiệm Thu (v1.7.4)
+- [x] **Khắc phục triệt để lỗi crash `InvalidOperationException` / `NullReferenceException` khi click chuột phải vào video:**
+  - Loại bỏ hoàn toàn `ItemContainerStyle` khỏi `ModernStudioContextMenu` trong `App.xaml`, chuyển sang cấu hình style phân cấp thông qua `<Style.Resources>`:
+    + Tách biệt hoàn toàn style của `MenuItem` và `Separator`.
+    + `Separator` có style 1px `{StaticResource BrushBorderSubtle}` riêng biệt, không bao giờ bị WPF ép kiểu nhầm sang `MenuItem`.
+  - Hỗ trợ đầy đủ `<ContentPresenter ContentSource="Icon"/>` trong `ModernStudioMenuItem` cho các item có icon tùy biến.
+  - Chuẩn hóa phương thức `OpenContextMenuAtCursor()` trong `VideoPlayerControl.xaml.cs`:
+    + Thiết lập tường minh `PlacementTarget = this`.
+    + Chuyển đổi tọa độ con trỏ chuột sang tọa độ cục bộ WPF bằng `PointFromScreen` với `PlacementMode.RelativePoint`, đảm bảo hiển thị mượt mà không xung đột giữa WinForms HWND và WPF Popup.
+- [x] **Kiểm thử tự động:** 54/54 test cases PASS (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và cập nhật bản phát hành mới ra [bin/publish/LumiePlayer.exe](file:///d:/LONGHT/AI/MVP_AG/bin/publish/LumiePlayer.exe).

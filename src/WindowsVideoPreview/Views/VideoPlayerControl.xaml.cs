@@ -440,8 +440,27 @@ public partial class VideoPlayerControl : System.Windows.Controls.UserControl
     {
         if (ContextMenu != null)
         {
-            ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
-            ContextMenu.IsOpen = true;
+            try
+            {
+                var screenPt = System.Windows.Forms.Cursor.Position;
+                Point wpfPt = PointFromScreen(new Point(screenPt.X, screenPt.Y));
+
+                ContextMenu.PlacementTarget = this;
+                ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.RelativePoint;
+                ContextMenu.HorizontalOffset = wpfPt.X;
+                ContextMenu.VerticalOffset = wpfPt.Y;
+                ContextMenu.IsOpen = true;
+            }
+            catch
+            {
+                try
+                {
+                    ContextMenu.PlacementTarget = this;
+                    ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse;
+                    ContextMenu.IsOpen = true;
+                }
+                catch { }
+            }
         }
     }
 
