@@ -18,6 +18,13 @@ public enum AudioSourceOption
     Mute
 }
 
+public enum PlaybackLoopMode
+{
+    NoLoop,
+    Loop,
+    PingPong
+}
+
 public class PlaybackCoordinator : IDisposable
 {
     private readonly MpvPlayer _playerA;
@@ -28,6 +35,7 @@ public class PlaybackCoordinator : IDisposable
 
     public PlaybackMode Mode { get; set; } = PlaybackMode.Single;
     public AudioSourceOption AudioSource { get; set; } = AudioSourceOption.AudioA;
+    public PlaybackLoopMode LoopMode { get; set; } = PlaybackLoopMode.NoLoop;
     public double OffsetSeconds { get; set; } = 0.0;
     public double MasterVolume { get; set; } = 100.0;
     public bool IsMuted { get; set; } = false;
@@ -53,20 +61,72 @@ public class PlaybackCoordinator : IDisposable
 
         _playerA.TimePosChanged += OnPlayerATimePosChanged;
         _playerA.PauseChanged += OnPlayerAPauseChanged;
+        _playerA.FileEnded += OnPlayerAFileEnded;
 
         // Periodic drift checker for compare mode
         _syncTimer = new System.Threading.Timer(OnSyncTick, null, 250, 250);
     }
 
+    private void OnPlayerAFileEnded()
+    {
+        if (LoopMode == PlaybackLoopMode.Loop)
+        {
+            double restartPos = LoopStart ?? 0.0;
+            _playerA.SetPlayDirection(true);
+            Seek(restartPos, exact: true);
+            Play();
+        }
+        else if (LoopMode == PlaybackLoopMode.PingPong)
+        {
+            double endPos = (LoopEnd.HasValue && LoopEnd.Value > 0) ? LoopEnd.Value : _playerA.Duration;
+            _playerA.SetPlayDirection(false);
+            Seek(Math.Max(0, endPos - 0.05), exact: true);
+            Play();
+        }
+    }
+
     private void OnPlayerATimePosChanged(double pos)
     {
-        // Check A-B Loop
-        if (LoopStart.HasValue && LoopEnd.HasValue && LoopEnd.Value > LoopStart.Value)
+        bool hasLoopAB = LoopStart.HasValue && LoopEnd.HasValue && LoopEnd.Value > LoopStart.Value;
+        double lowerBound = hasLoopAB ? LoopStart!.Value : 0.0;
+        double upperBound = hasLoopAB ? LoopEnd!.Value : _playerA.Duration;
+
+        if (upperBound > lowerBound && _playerA.IsLoaded)
         {
-            if (pos >= LoopEnd.Value)
+            if (_playerA.IsPlayingForward)
             {
-                Seek(LoopStart.Value);
-                return;
+                if (pos >= upperBound)
+                {
+                    if (LoopMode == PlaybackLoopMode.Loop || (hasLoopAB && LoopMode == PlaybackLoopMode.NoLoop))
+                    {
+                        if (LoopMode == PlaybackLoopMode.Loop)
+                        {
+                            Seek(lowerBound, exact: true);
+                            return;
+                        }
+                        else
+                        {
+                            Pause();
+                            Seek(upperBound, exact: true);
+                            return;
+                        }
+                    }
+                    else if (LoopMode == PlaybackLoopMode.PingPong)
+                    {
+                        _playerA.SetPlayDirection(false);
+                        Seek(Math.Max(lowerBound, upperBound - 0.05), exact: false);
+                        return;
+                    }
+                }
+            }
+            else // playing backward (PingPong)
+            {
+                if (pos <= lowerBound || pos <= 0.02)
+                {
+                    _playerA.SetPlayDirection(true);
+                    Seek(lowerBound + 0.02, exact: false);
+                    return;
+                }
             }
         }
 
@@ -132,6 +192,19 @@ public class PlaybackCoordinator : IDisposable
 
     public void Play()
     {
+        // Replay at EOF or Loop boundary
+        if (_playerA.IsEnded || (_playerA.Duration > 0 && _playerA.TimePos >= _playerA.Duration - 0.08))
+        {
+            double restartPos = LoopStart ?? 0.0;
+            _playerA.SetPlayDirection(true);
+            Seek(restartPos, exact: true);
+        }
+        else if (LoopEnd.HasValue && LoopStart.HasValue && _playerA.TimePos >= LoopEnd.Value)
+        {
+            _playerA.SetPlayDirection(true);
+            Seek(LoopStart.Value, exact: true);
+        }
+
         ApplyAudioRouting();
         _playerA.Play();
         if (Mode == PlaybackMode.Compare && _playerB.IsLoaded)
@@ -166,6 +239,7 @@ public class PlaybackCoordinator : IDisposable
 
     public void Seek(double targetSeconds, bool exact = true)
     {
+        _playerA.SetPlayDirection(true);
         _playerA.Seek(targetSeconds, exact);
         if (Mode == PlaybackMode.Compare && _playerB.IsLoaded)
         {

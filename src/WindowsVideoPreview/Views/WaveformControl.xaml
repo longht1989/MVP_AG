@@ -17,7 +17,7 @@
         <Canvas x:Name="TicksCanvas" IsHitTestVisible="False"/>
 
         <!-- A-B Loop highlight rect -->
-        <Rectangle x:Name="LoopRect" Fill="#33F59E0B" Visibility="Collapsed" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+        <Border x:Name="LoopRect" Background="#33F59E0B" BorderBrush="#F59E0B" BorderThickness="2,0,2,0" Visibility="Collapsed" HorizontalAlignment="Left" IsHitTestVisible="False"/>
 
         <!-- Hover line and hover timecode pill -->
         <Line x:Name="HoverGuideLine" Y1="0" Y2="64" Stroke="#55FFFFFF" StrokeThickness="1" StrokeDashArray="2,2" Visibility="Collapsed" IsHitTestVisible="False"/>

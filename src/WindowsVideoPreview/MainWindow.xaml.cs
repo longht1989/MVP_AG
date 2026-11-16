@@ -110,6 +110,14 @@ public partial class MainWindow : Window
             {
                 UpdatePlaylistLayout();
             }
+            if (e.PropertyName == nameof(MainViewModel.Position) || e.PropertyName == nameof(MainViewModel.Duration))
+            {
+                UpdatePlayheadPillPosition();
+            }
+            if (e.PropertyName == nameof(MainViewModel.LoopStart) || e.PropertyName == nameof(MainViewModel.LoopEnd) || e.PropertyName == nameof(MainViewModel.Duration))
+            {
+                UpdateTimelineLoopVisuals();
+            }
         };
 
         UpdatePlaylistLayout();
@@ -230,98 +238,101 @@ public partial class MainWindow : Window
         // Don't intercept typing in textboxes
         if (e.OriginalSource is TextBox) return;
 
-        bool isShift = (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
-        bool isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+        Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+        ModifierKeys mods = Keyboard.Modifiers;
 
-        // Quick A/B Flip for Overlay mode
-        if (e.Key == Key.Tab && _vm.IsOverlay)
+        // Escape handling for Fullscreen
+        if (key == Key.Escape && _vm.IsFullscreen)
+        {
+            _vm.IsFullscreen = false;
+            e.Handled = true;
+            return;
+        }
+
+        // Quick Flip for Overlay mode (Tab)
+        if (key == Key.Tab && _vm.IsOverlay)
         {
             PlayerBControl.SetWindowOpacity(0.0);
             e.Handled = true;
             return;
         }
 
-        if (isCtrl && isShift && e.Key == Key.O)
+        // Match against HotkeyManager
+        string? actionId = _vm.HotkeyManager.MatchAction(key, mods);
+        if (actionId != null)
         {
-            _vm.OpenFileBCommand.Execute(null);
+            ExecuteHotkeyAction(actionId);
             e.Handled = true;
             return;
         }
+    }
 
-        if (isCtrl && e.Key == Key.O)
+    private void ExecuteHotkeyAction(string actionId)
+    {
+        switch (actionId)
         {
-            _vm.OpenFileACommand.Execute(null);
-            e.Handled = true;
-            return;
-        }
-
-        switch (e.Key)
-        {
-            case Key.Space:
+            case HotkeyManager.Actions.PlayPause:
                 _vm.PlayPauseCommand.Execute(null);
-                e.Handled = true;
                 break;
-
-            case Key.Left:
-                if (isShift)
-                {
-                    _vm.SeekRelativeCommand.Execute("-1");
-                }
-                else
-                {
-                    _vm.FrameStepBackwardCommand.Execute(null);
-                }
-                e.Handled = true;
+            case HotkeyManager.Actions.FrameStepForward:
+                _vm.FrameStepForwardCommand.Execute(null);
                 break;
-
-            case Key.Right:
-                if (isShift)
-                {
-                    _vm.SeekRelativeCommand.Execute("1");
-                }
-                else
-                {
-                    _vm.FrameStepForwardCommand.Execute(null);
-                }
-                e.Handled = true;
+            case HotkeyManager.Actions.FrameStepBackward:
+                _vm.FrameStepBackwardCommand.Execute(null);
                 break;
-
-            case Key.F:
-                _vm.ToggleFullscreenCommand.Execute(null);
-                e.Handled = true;
+            case HotkeyManager.Actions.SeekForward1s:
+                _vm.SeekRelativeCommand.Execute("1");
                 break;
-
-            case Key.Escape:
-                if (_vm.IsFullscreen)
-                {
-                    _vm.IsFullscreen = false;
-                    e.Handled = true;
-                }
+            case HotkeyManager.Actions.SeekBackward1s:
+                _vm.SeekRelativeCommand.Execute("-1");
                 break;
-
-            case Key.W:
-                _vm.ToggleWaveformCommand.Execute(null);
-                e.Handled = true;
+            case HotkeyManager.Actions.SeekForward5s:
+                _vm.SeekRelativeCommand.Execute("5");
                 break;
-
-            case Key.M:
-                _vm.IsMuted = !_vm.IsMuted;
-                e.Handled = true;
+            case HotkeyManager.Actions.SeekBackward5s:
+                _vm.SeekRelativeCommand.Execute("-5");
                 break;
-
-            case Key.OemOpenBrackets: // [
+            case HotkeyManager.Actions.SetLoopA:
                 _vm.SetLoopACommand.Execute(null);
-                e.Handled = true;
                 break;
-
-            case Key.OemCloseBrackets: // ]
+            case HotkeyManager.Actions.SetLoopB:
                 _vm.SetLoopBCommand.Execute(null);
-                e.Handled = true;
                 break;
-
-            case Key.OemBackslash:
+            case HotkeyManager.Actions.ClearLoop:
                 _vm.ClearLoopCommand.Execute(null);
-                e.Handled = true;
+                break;
+            case HotkeyManager.Actions.ToggleLoopMode:
+                _vm.CycleLoopModeCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.ToggleFullscreen:
+                _vm.ToggleFullscreenCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.ToggleWaveform:
+                _vm.ToggleWaveformCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.TogglePlaylist:
+                _vm.TogglePlaylistCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.ToggleInspector:
+                OnShowMetadataClick(this, new RoutedEventArgs());
+                break;
+            case HotkeyManager.Actions.ToggleMute:
+                _vm.IsMuted = !_vm.IsMuted;
+                break;
+            case HotkeyManager.Actions.OpenFileA:
+                _vm.OpenFileACommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.OpenFileB:
+                _vm.OpenFileBCommand.Execute(null);
+                break;
+            case HotkeyManager.Actions.JumpToTimecode:
+                OnJumpTimecodeClick(this, new RoutedEventArgs());
+                break;
+            case HotkeyManager.Actions.FlipWipe:
+                if (_vm.IsOverlay)
+                {
+                    PlayerBControl.SetWindowOpacity(0.0);
+                }
                 break;
         }
     }
@@ -412,6 +423,66 @@ public partial class MainWindow : Window
         double fraction = Math.Clamp(mouseX / elem.ActualWidth, 0.0, 1.0);
         double targetSec = fraction * duration;
         _vm.UserSeek(targetSec);
+    }
+
+    private void OnTimelineGridSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdatePlayheadPillPosition();
+        UpdateTimelineLoopVisuals();
+    }
+
+    private void UpdatePlayheadPillPosition()
+    {
+        if (TimelineGrid == null || FloatingPlayheadPill == null) return;
+        if (TimelineGrid.ActualWidth <= 0 || _vm.Duration <= 0)
+        {
+            Canvas.SetLeft(FloatingPlayheadPill, 0);
+            return;
+        }
+
+        double ratio = Math.Clamp(_vm.Position / _vm.Duration, 0.0, 1.0);
+        double trackWidth = TimelineGrid.ActualWidth;
+        double pillWidth = FloatingPlayheadPill.ActualWidth > 0 ? FloatingPlayheadPill.ActualWidth : 32.0;
+        double left = (ratio * trackWidth) - (pillWidth / 2.0);
+        left = Math.Clamp(left, 0.0, Math.Max(0.0, trackWidth - pillWidth));
+        Canvas.SetLeft(FloatingPlayheadPill, left);
+    }
+
+    private void UpdateTimelineLoopVisuals()
+    {
+        if (TimelineGrid == null || TimelineLoopBand == null || TimelineLoopInMarker == null || TimelineLoopOutMarker == null) return;
+        if (_vm.Duration <= 0 || TimelineGrid.ActualWidth <= 0 || (!_vm.LoopStart.HasValue && !_vm.LoopEnd.HasValue))
+        {
+            TimelineLoopBand.Visibility = Visibility.Collapsed;
+            TimelineLoopInMarker.Visibility = Visibility.Collapsed;
+            TimelineLoopOutMarker.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        double start = _vm.LoopStart ?? 0.0;
+        double end = _vm.LoopEnd ?? _vm.Duration;
+
+        if (end <= start)
+        {
+            TimelineLoopBand.Visibility = Visibility.Collapsed;
+            TimelineLoopInMarker.Visibility = Visibility.Collapsed;
+            TimelineLoopOutMarker.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        double totalWidth = TimelineGrid.ActualWidth;
+        double startX = Math.Clamp(start / _vm.Duration, 0.0, 1.0) * totalWidth;
+        double endX = Math.Clamp(end / _vm.Duration, 0.0, 1.0) * totalWidth;
+
+        Canvas.SetLeft(TimelineLoopBand, startX);
+        TimelineLoopBand.Width = Math.Max(2, endX - startX);
+        TimelineLoopBand.Visibility = Visibility.Visible;
+
+        Canvas.SetLeft(TimelineLoopInMarker, Math.Max(0, startX - 1));
+        TimelineLoopInMarker.Visibility = _vm.LoopStart.HasValue ? Visibility.Visible : Visibility.Collapsed;
+
+        Canvas.SetLeft(TimelineLoopOutMarker, Math.Max(0, endX - 1));
+        TimelineLoopOutMarker.Visibility = _vm.LoopEnd.HasValue ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnWaveformSeekRequested(double targetSeconds)

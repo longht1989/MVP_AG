@@ -218,6 +218,13 @@
                             <TextBlock Text="Fullscreen" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <Button Style="{StaticResource ToolbarBtn}" Command="{Binding OpenHotkeySettingsCommand}" ToolTip="Customize Keyboard Shortcuts" Margin="2,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconKeyboard}" Width="14" Height="14" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock Text="Shortcuts" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -379,24 +386,74 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Current Timecode A (Clickable for Jump) -->
-                    <Button Grid.Column="0" ToolTip="Click to Jump to Timecode/Frame" Click="OnJumpTimecodeClick"
+                    <!-- Current Timecode A (Clickable for Jump, Right-click to switch Format) -->
+                    <Button Grid.Column="0" ToolTip="Click to Jump to Timecode/Frame | Right-Click to switch Format" Click="OnJumpTimecodeClick"
                             Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4,2" VerticalAlignment="Center">
+                        <Button.ContextMenu>
+                            <ContextMenu Background="{StaticResource BrushBgSurface}" BorderBrush="{StaticResource BrushBorderStrong}">
+                                <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
+                                <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding TimecodeA}" FontFamily="Consolas, monospace" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}"/>
                             <TextBlock Text="{Binding FrameTextA, StringFormat='  [{0}]'}" FontFamily="Consolas, monospace" FontSize="12" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Scrub Slider Container with Full Hit-Test Surface -->
-                    <Grid Grid.Column="1" x:Name="TimelineGrid" Margin="16,0" VerticalAlignment="Center" Height="28" 
-                          Background="Transparent" Cursor="Hand"
-                          PreviewMouseDown="OnTimelinePreviewMouseDown" 
-                          PreviewMouseMove="OnTimelinePreviewMouseMove" 
-                          PreviewMouseUp="OnTimelinePreviewMouseUp">
-                        <Slider x:Name="TimelineSlider" Style="{StaticResource ModernTimelineSlider}" 
-                                Minimum="0" Maximum="{Binding Duration}" Value="{Binding Position, Mode=TwoWay}" 
-                                VerticalAlignment="Center" IsHitTestVisible="False"/>
+                    <!-- Scrub Slider Container with Full Hit-Test Surface & 3-Tier Studio Display -->
+                    <Grid Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <!-- Top Tier: Floating Playhead Time/Frame Pill -->
+                            <RowDefinition Height="18"/>
+                            <!-- Middle Tier: Scrubbing Surface, Loop Highlight Band & Track -->
+                            <RowDefinition Height="24"/>
+                            <!-- Bottom Tier: Total Frames / Timecode & FPS Tracking -->
+                            <RowDefinition Height="16"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Top Tier: Floating Playhead Pill Canvas -->
+                        <Canvas Grid.Row="0" x:Name="PlayheadCanvas" ClipToBounds="False" IsHitTestVisible="False">
+                            <Border x:Name="FloatingPlayheadPill" Background="{StaticResource BrushAccent}" CornerRadius="3" Padding="5,1" Canvas.Left="0" Canvas.Top="0">
+                                <TextBlock Text="{Binding CurrentPlayheadText}" FontFamily="Consolas, monospace" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            </Border>
+                        </Canvas>
+
+                        <!-- Middle Tier: Hit-testing Grid with Loop Band, Markers, and Slider -->
+                        <Grid Grid.Row="1" x:Name="TimelineGrid"
+                              Background="Transparent" Cursor="Hand"
+                              PreviewMouseDown="OnTimelinePreviewMouseDown" 
+                              PreviewMouseMove="OnTimelinePreviewMouseMove" 
+                              PreviewMouseUp="OnTimelinePreviewMouseUp"
+                              SizeChanged="OnTimelineGridSizeChanged">
+                            <Grid.ContextMenu>
+                                <ContextMenu Background="{StaticResource BrushBgSurface}" BorderBrush="{StaticResource BrushBorderStrong}">
+                                    <MenuItem Header="Timecode (00:00:00.000)" IsChecked="{Binding IsTimecodeMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Timecode"/>
+                                    <MenuItem Header="Frames (#1234)" IsChecked="{Binding IsFrameMode}" Command="{Binding SetTimeFormatCommand}" CommandParameter="Frames"/>
+                                </ContextMenu>
+                            </Grid.ContextMenu>
+
+                            <!-- Loop A-B Visual Band & Markers -->
+                            <Canvas x:Name="TimelineLoopCanvas" IsHitTestVisible="False" VerticalAlignment="Center" Height="24">
+                                <!-- Amber Highlight Band -->
+                                <Border x:Name="TimelineLoopBand" Background="#33F59E0B" BorderBrush="#F59E0B" BorderThickness="1,0,1,0" Height="8" Canvas.Top="8" Visibility="Collapsed"/>
+                                <!-- In Marker [ -->
+                                <Border x:Name="TimelineLoopInMarker" Background="#F59E0B" Width="2" Height="18" Canvas.Top="3" CornerRadius="1" Visibility="Collapsed"/>
+                                <!-- Out Marker ] -->
+                                <Border x:Name="TimelineLoopOutMarker" Background="#F59E0B" Width="2" Height="18" Canvas.Top="3" CornerRadius="1" Visibility="Collapsed"/>
+                            </Canvas>
+
+                            <!-- Slider with Thumb and Progress Bar -->
+                            <Slider x:Name="TimelineSlider" Style="{StaticResource ModernTimelineSlider}" 
+                                    Minimum="0" Maximum="{Binding Duration}" Value="{Binding Position, Mode=TwoWay}" 
+                                    VerticalAlignment="Center" IsHitTestVisible="False"/>
+                        </Grid>
+
+                        <!-- Bottom Tier: Metadata Row (Left: Total frames/timecode, Right: FPS) -->
+                        <DockPanel Grid.Row="2" Margin="0,1,0,0">
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding TotalDurationText}" FontFamily="Consolas, monospace" FontSize="10" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding FpsSummaryText}" FontFamily="Consolas, monospace" FontSize="10" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
                     </Grid>
 
                     <!-- Right Info: Compare Timecode B & Total Duration -->
@@ -427,14 +484,14 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: A-B Loop Controls -->
+                    <!-- Left: A-B Loop Controls & Loop Mode -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,0,8,0">
+                        <Border Background="{StaticResource BrushBgControl}" BorderBrush="{StaticResource BrushBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopACommand}" ToolTip="Set Loop Start (A) [key: [ ]">
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopACommand}" ToolTip="Set Loop Start (A) [key: ,]">
                                     <TextBlock Text="[ Loop A" FontSize="11" FontWeight="SemiBold"/>
                                 </Button>
-                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopBCommand}" ToolTip="Set Loop End (B) [key: ] ]">
+                                <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="6,2" Command="{Binding SetLoopBCommand}" ToolTip="Set Loop End (B) [key: .]">
                                     <TextBlock Text="Loop B ]" FontSize="11" FontWeight="SemiBold"/>
                                 </Button>
                                 <Button Style="{StaticResource ToolbarBtn}" Height="26" Padding="5,2" Command="{Binding ClearLoopCommand}" ToolTip="Clear A-B Loop [key: \]">
@@ -442,6 +499,48 @@
                                 </Button>
                             </StackPanel>
                         </Border>
+
+                        <!-- Loop Mode Cycle Button (No Loop / Loop / Ping Pong) -->
+                        <Button Style="{StaticResource ToolbarBtn}" Height="28" Padding="7,2" Margin="0,0,8,0"
+                                Command="{Binding CycleLoopModeCommand}" 
+                                ToolTip="{Binding LoopModeToolTip}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Width="12" Height="12" Stretch="Uniform" Margin="0,0,5,0">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Data" Value="{StaticResource IconOnce}"/>
+                                            <Setter Property="Fill" Value="{StaticResource BrushTextMuted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="Loop">
+                                                    <Setter Property="Data" Value="{StaticResource IconLoop}"/>
+                                                    <Setter Property="Fill" Value="{StaticResource BrushAccent}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="PingPong">
+                                                    <Setter Property="Data" Value="{StaticResource IconPingPong}"/>
+                                                    <Setter Property="Fill" Value="#F59E0B"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                                <TextBlock Text="{Binding LoopModeDisplayText}" FontSize="11" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="Loop">
+                                                    <Setter Property="Foreground" Value="{StaticResource BrushAccent}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding LoopModeDisplayText}" Value="PingPong">
+                                                    <Setter Property="Foreground" Value="#F59E0B"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Button>
+
                         <TextBlock Text="{Binding LoopSummaryText}" Foreground="{StaticResource BrushTextMuted}" FontSize="11" VerticalAlignment="Center"/>
                     </StackPanel>
 
@@ -591,10 +690,20 @@
 
                 <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [Shift+←/→] ±1s | [Tab] Flip Wipe | [F] Fullscreen | [W] Waveform" 
-                               FontSize="11" Foreground="{StaticResource BrushTextMuted}"/>
-                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding OpenHotkeySettingsCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0" ToolTip="Click to customize keyboard shortcuts">
+                    <TextBlock Text="Shortcuts: [Space] Play/Pause | [←/→] Step Frame | [Shift+←/→] ±1s | [,] In | [.] Out | [Ctrl+L] Loop Mode | ⌨ Customize..." 
+                               FontSize="11" Foreground="{StaticResource BrushTextMuted}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource BrushAccent}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Button>
             </Grid>
         </Border>
     </Grid>

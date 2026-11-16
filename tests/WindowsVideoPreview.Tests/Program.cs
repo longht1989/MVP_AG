@@ -180,6 +180,50 @@ class Program
             Assert("MPV engine test", false, ex.Message);
         }
 
+        // 6. Test HotkeyManager & Custom Shortcut Mapping
+        Console.WriteLine("\n--- Testing HotkeyManager & Custom Shortcuts ---");
+        var hkm = new HotkeyManager();
+        var actionA = hkm.MatchAction(System.Windows.Input.Key.OemComma, System.Windows.Input.ModifierKeys.None);
+        Assert("Default Loop In shortcut (Comma)", actionA == HotkeyManager.Actions.SetLoopA, $"Action: {actionA}");
+
+        var actionB_period = hkm.MatchAction(System.Windows.Input.Key.OemPeriod, System.Windows.Input.ModifierKeys.None);
+        Assert("Default Loop Out shortcut (Period)", actionB_period == HotkeyManager.Actions.SetLoopB, $"Action: {actionB_period}");
+
+        var actionB_slash = hkm.MatchAction(System.Windows.Input.Key.OemQuestion, System.Windows.Input.ModifierKeys.None);
+        Assert("Fallback Loop Out shortcut (Slash)", actionB_slash == HotkeyManager.Actions.SetLoopB, $"Action: {actionB_slash}");
+
+        var actionLoopMode = hkm.MatchAction(System.Windows.Input.Key.L, System.Windows.Input.ModifierKeys.Control);
+        Assert("Loop Mode shortcut (Ctrl+L)", actionLoopMode == HotkeyManager.Actions.ToggleLoopMode, $"Action: {actionLoopMode}");
+
+        // Test custom chord parsing and export
+        var parsed = HotkeyManager.TryParseChord("Ctrl+Shift+P", out var parsedKey, out var parsedMods);
+        Assert("TryParseChord Ctrl+Shift+P", parsed && parsedKey == System.Windows.Input.Key.P && parsedMods == (System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift));
+
+        var customMap = new System.Collections.Generic.Dictionary<string, string>
+        {
+            [HotkeyManager.Actions.PlayPause] = "K"
+        };
+        hkm.LoadCustomHotkeys(customMap);
+        var actionK = hkm.MatchAction(System.Windows.Input.Key.K, System.Windows.Input.ModifierKeys.None);
+        Assert("Custom shortcut remapping (K for PlayPause)", actionK == HotkeyManager.Actions.PlayPause, $"Action: {actionK}");
+
+        hkm.ResetToDefaults();
+        var actionSpace = hkm.MatchAction(System.Windows.Input.Key.Space, System.Windows.Input.ModifierKeys.None);
+        Assert("Reset to defaults restores Space for PlayPause", actionSpace == HotkeyManager.Actions.PlayPause, $"Action: {actionSpace}");
+
+        // 7. Test LoopMode and Settings Serialization
+        Console.WriteLine("\n--- Testing LoopMode & TimeDisplayFormat Settings ---");
+        var testSettings = new SettingsService();
+        testSettings.Current.TimeDisplayFormat = "Frames";
+        testSettings.Current.LoopMode = "PingPong";
+        testSettings.Current.CustomHotkeys[HotkeyManager.Actions.PlayPause] = "K";
+        testSettings.Save();
+
+        var reloaded = new SettingsService().Load();
+        Assert("TimeDisplayFormat persistence", reloaded.TimeDisplayFormat == "Frames", reloaded.TimeDisplayFormat);
+        Assert("LoopMode persistence", reloaded.LoopMode == "PingPong", reloaded.LoopMode);
+        Assert("CustomHotkeys persistence", reloaded.CustomHotkeys.ContainsKey(HotkeyManager.Actions.PlayPause) && reloaded.CustomHotkeys[HotkeyManager.Actions.PlayPause] == "K");
+
         Console.WriteLine("\n==================================================");
         Console.WriteLine($"  TEST RESULTS: {passed} PASSED, {failed} FAILED");
         Console.WriteLine("==================================================");

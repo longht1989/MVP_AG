@@ -283,6 +283,7 @@ public class MainViewModel : ViewModelBase
             {
                 _coordinator.LoopStart = value;
                 OnPropertyChanged(nameof(LoopSummaryText));
+                OnPropertyChanged(nameof(HasLoopAB));
             }
         }
     }
@@ -296,13 +297,91 @@ public class MainViewModel : ViewModelBase
             {
                 _coordinator.LoopEnd = value;
                 OnPropertyChanged(nameof(LoopSummaryText));
+                OnPropertyChanged(nameof(HasLoopAB));
             }
         }
     }
 
+    public bool HasLoopAB => LoopStart.HasValue && LoopEnd.HasValue && LoopEnd.Value > LoopStart.Value;
+
     public string LoopSummaryText => (LoopStart.HasValue || LoopEnd.HasValue)
         ? $"Loop: {(LoopStart.HasValue ? FormatTimecode(LoopStart.Value) : "00:00:00.000")} → {(LoopEnd.HasValue ? FormatTimecode(LoopEnd.Value) : "End")}"
         : "Loop: Off";
+
+    public PlaybackLoopMode LoopMode
+    {
+        get => _coordinator.LoopMode;
+        set
+        {
+            if (_coordinator.LoopMode != value)
+            {
+                _coordinator.LoopMode = value;
+                _settingsService.Current.LoopMode = value.ToString();
+                _settingsService.Save();
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(LoopModeDisplayText));
+                OnPropertyChanged(nameof(LoopModeToolTip));
+            }
+        }
+    }
+
+    public string LoopModeDisplayText => LoopMode switch
+    {
+        PlaybackLoopMode.Loop => "Loop",
+        PlaybackLoopMode.PingPong => "PingPong",
+        _ => "Once"
+    };
+
+    public string LoopModeToolTip => LoopMode switch
+    {
+        PlaybackLoopMode.Loop => "Loop Mode: Repeat Forever [Ctrl+L]",
+        PlaybackLoopMode.PingPong => "Loop Mode: Ping Pong (Forward / Backward) [Ctrl+L]",
+        _ => "Loop Mode: Play Once [Ctrl+L]"
+    };
+
+    private string _timeDisplayFormat = "Timecode";
+    public string TimeDisplayFormat
+    {
+        get => _timeDisplayFormat;
+        set
+        {
+            if (SetProperty(ref _timeDisplayFormat, value))
+            {
+                _settingsService.Current.TimeDisplayFormat = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(IsTimecodeMode));
+                OnPropertyChanged(nameof(IsFrameMode));
+                UpdateTimecodesAndFrames();
+            }
+        }
+    }
+
+    public bool IsTimecodeMode => TimeDisplayFormat == "Timecode";
+    public bool IsFrameMode => TimeDisplayFormat == "Frames";
+
+    private string _currentPlayheadText = "00:00:00.000";
+    private string _totalDurationText = "00:00:00.000";
+    private string _fpsSummaryText = "0.00 fps";
+
+    public string CurrentPlayheadText
+    {
+        get => _currentPlayheadText;
+        set => SetProperty(ref _currentPlayheadText, value);
+    }
+
+    public string TotalDurationText
+    {
+        get => _totalDurationText;
+        set => SetProperty(ref _totalDurationText, value);
+    }
+
+    public string FpsSummaryText
+    {
+        get => _fpsSummaryText;
+        set => SetProperty(ref _fpsSummaryText, value);
+    }
+
+    public HotkeyManager HotkeyManager { get; } = new();
 
     public string TimecodeA
     {
@@ -358,6 +437,9 @@ public class MainViewModel : ViewModelBase
     public ICommand ToggleWaveformCommand { get; }
     public ICommand TogglePlaylistCommand { get; }
     public ICommand ToggleFullscreenCommand { get; }
+    public ICommand CycleLoopModeCommand { get; }
+    public ICommand SetTimeFormatCommand { get; }
+    public ICommand OpenHotkeySettingsCommand { get; }
     public ICommand SetLoopACommand { get; }
     public ICommand SetLoopBCommand { get; }
     public ICommand ClearLoopCommand { get; }
@@ -396,6 +478,12 @@ public class MainViewModel : ViewModelBase
         _isPlaylistVisible = settings.ShowPlaylist;
         _volume = settings.DefaultVolume;
         _coordinator.MasterVolume = _volume;
+        _timeDisplayFormat = string.IsNullOrEmpty(settings.TimeDisplayFormat) ? "Timecode" : settings.TimeDisplayFormat;
+        if (Enum.TryParse<PlaybackLoopMode>(settings.LoopMode, out var lm))
+        {
+            _coordinator.LoopMode = lm;
+        }
+        HotkeyManager.LoadCustomHotkeys(settings.CustomHotkeys);
 
         // Wire coordinator events
         _coordinator.MasterPositionChanged += OnMasterPositionChanged;
@@ -422,6 +510,24 @@ public class MainViewModel : ViewModelBase
         ToggleWaveformCommand = new RelayCommand(() => IsWaveformVisible = !IsWaveformVisible);
         TogglePlaylistCommand = new RelayCommand(() => IsPlaylistVisible = !IsPlaylistVisible);
         ToggleFullscreenCommand = new RelayCommand(() => IsFullscreen = !IsFullscreen);
+        CycleLoopModeCommand = new RelayCommand(() =>
+        {
+            LoopMode = LoopMode switch
+            {
+                PlaybackLoopMode.NoLoop => PlaybackLoopMode.Loop,
+                PlaybackLoopMode.Loop => PlaybackLoopMode.PingPong,
+                PlaybackLoopMode.PingPong => PlaybackLoopMode.NoLoop,
+                _ => PlaybackLoopMode.NoLoop
+            };
+        });
+        SetTimeFormatCommand = new RelayCommand(param =>
+        {
+            if (param is string fmt)
+            {
+                TimeDisplayFormat = fmt;
+            }
+        });
+        OpenHotkeySettingsCommand = new RelayCommand(() => OpenHotkeySettingsDialog());
 
         SetLoopACommand = new RelayCommand(() => LoopStart = Position);
         SetLoopBCommand = new RelayCommand(() => LoopEnd = Position);
@@ -698,6 +804,37 @@ public class MainViewModel : ViewModelBase
         long totalB = MetadataB?.TotalFrames ?? _coordinator.PlayerB.TotalFrames;
         long currentB = fpsB > 0 ? (long)Math.Floor(posB * fpsB) : 0;
         FrameTextB = totalB > 0 ? $"Frame: {currentB} / {totalB}" : $"Frame: {currentB}";
+
+        // Timeline Floating Playhead & Metric Tracking
+        if (IsFrameMode)
+        {
+            CurrentPlayheadText = $"{Math.Max(0, currentA)}";
+            TotalDurationText = totalA > 0 ? $"{totalA} frames" : "0 frames";
+        }
+        else
+        {
+            CurrentPlayheadText = FormatTimecode(posA);
+            TotalDurationText = FormatTimecode(Duration);
+        }
+
+        FpsSummaryText = fpsA > 0 ? $"{fpsA:F2} fps" : "0.00 fps";
+        OnPropertyChanged(nameof(HasLoopAB));
+    }
+
+    private void OpenHotkeySettingsDialog()
+    {
+        var win = Application.Current.MainWindow;
+        var dlg = new Views.HotkeySettingsDialog(HotkeyManager)
+        {
+            Owner = win
+        };
+        if (dlg.ShowDialog() == true)
+        {
+            _settingsService.Current.CustomHotkeys = HotkeyManager.ExportCustomHotkeys();
+            _settingsService.Save();
+            OnPropertyChanged(nameof(LoopModeToolTip));
+            StatusMessage = "Keyboard shortcuts updated successfully.";
+        }
     }
 
     public static string FormatTimecode(double seconds)

@@ -139,6 +139,8 @@ Theo đánh giá tại `update_ui.md`, phiên bản v1.6 nâng cấp toàn bộ 
 - [x] **Kiểm thử tự động:** 29/29 test cases PASS (100% Green).
 - [x] **Đóng gói phát hành:** Đã publish phiên bản mới nhất ra `bin\publish\LumiePlayer.exe`.
 
+
+
 ---
 
 ## 8. Kế Hoạch Khắc Phục Màu Sắc Speed ComboBox (v1.6.1)
@@ -177,3 +179,177 @@ Theo đánh giá tại `update_ui.md`, phiên bản v1.6 nâng cấp toàn bộ 
 
 
 
+
+
+---
+
+## 10. Kế Hoạch Cập Nhật Tính Năng Phát Lại, Chế Độ Lặp (Loop/PingPong), Cải Tiến Timeline & Tùy Biến Phím Tắt (v1.7)
+
+### 1. Mục Tiêu Cập Nhật
+Theo yêu cầu mới của người dùng và thiết kế từ ảnh chụp đính kèm:
+1. **Phát lại từ đầu khi video kết thúc (Space to Replay):** Nhấn phím `Space` khi video đã kết thúc sẽ tự động tua về đầu và tiếp tục phát (thay vì bị kẹt lại ở frame cuối cùng).
+2. **Hệ thống chế độ lặp 3 trạng thái:** Bổ sung tùy chọn `No Loop` (Phát 1 lần rồi dừng) / `Loop` (Lặp vô tận) / `Ping Pong` (Đảo chiều phát xuôi - ngược liên tục).
+3. **Hiển thị trực quan đoạn Loop A-B trên Timeline:** Thêm dải màu highlight amber `#F59E0B` và 2 cọc mốc giới hạn In-point `[` và Out-point `]` nổi bật trên thanh timeline chính và waveform.
+4. **Menu chuột phải (Context Menu) chọn định dạng hiển thị:** Cho phép nhấp chuột phải vào Timeline để chọn hiển thị theo `Timecode (hh:mm:ss.fff)` hoặc `Số Frame (#1234)`.
+5. **Nhãn thời gian nổi bám theo đầu đọc Playhead (Floating Timecode/Frame Pill):** Thiết kế nhãn chỉ số thời gian/frame nổi ngay phía trên thanh trượt, tự động di chuyển bám sát con trỏ playhead trong thời gian thực (chuẩn Studio NLE như ảnh tham khảo).
+6. **Chỉnh sửa phím tắt Set Loop A/B mặc định thành `,` và `.` (hỗ trợ cả `/`):**
+   - Đổi phím tắt từ `[` và `]` sang:
+     - Set Loop A: Phím `,` (`OemComma` - dấu phẩy)
+     - Set Loop B: Phím `.` (`OemPeriod` - dấu chấm, hỗ trợ linh hoạt cả phím `/` `OemQuestion`)
+   - Cập nhật ToolTip nút A, B trên giao diện và văn bản hướng dẫn Shortcuts dưới thanh trạng thái.
+7. **Bổ sung tính năng Custom Hotkey (Tùy biến phím tắt toàn diện):**
+   - Cho phép người dùng tùy ý cấu hình lại bất kỳ phím tắt nào trong ứng dụng theo thói quen cá nhân.
+   - Hộp thoại Cài đặt Phím tắt chuyên nghiệp (`HotkeySettingsDialog`) có khả năng bắt phím trực tiếp khi nhấn (Key Recording).
+   - Lưu trữ tự động vào `settings.json` và hỗ trợ Khôi phục mặc định (Reset to Defaults).
+
+---
+
+### 2. Thiết Kế Kỹ Thuật Chi Tiết
+
+#### A. Tự động Replay khi nhấn Space ở cuối video
+- **Logic:** Trong `PlaybackCoordinator.TogglePlayPause()` và `MainViewModel.PlayPauseCommand`:
+  - Kiểm tra nếu `_playerA.IsEnded` hoặc `_playerA.TimePos >= _playerA.Duration - 0.08`:
+    - Gọi `Seek(LoopStart ?? 0, exact: true)`.
+    - Gọi `Play()`.
+  - Giúp thao tác xem đi xem lại video bằng phím Space mượt mà, không bị kẹt ở khung hình cuối.
+
+#### B. Chế độ lặp Loop / Ping Pong / No Loop
+- **Mô hình hóa:**
+  ```csharp
+  public enum PlaybackLoopMode
+  {
+      NoLoop,   // Dừng lại khi tới cuối (hoặc tới LoopEnd)
+      Loop,     // Khi chạm cuối/LoopEnd, nhảy về đầu/LoopStart và tiếp tục phát xuôi
+      PingPong  // Khi chạm cuối/LoopEnd, đảo chiều phát lùi (-); khi chạm đầu/LoopStart, đảo chiều phát xuôi (+)
+  }
+  ```
+- **Xử lý Engine MPV:**
+  - `MpvPlayer`: Tích hợp hàm `SetPlayDirection(bool forward)` điều khiển property `play-dir` (`+` hoặc `-`) của libmpv.
+  - `PlaybackCoordinator`: Trong `OnPlayerATimePosChanged`, khi `TimePos` chạm giới hạn `LoopEnd` (hoặc EOF):
+    - Nếu `Loop`: `Seek(LoopStart ?? 0)` và tiếp tục phát xuôi.
+    - If `PingPong`: Nếu đang đi xuôi, chuyển hướng `play-dir = "-"` và phát lùi; khi lùi chạm `LoopStart ?? 0`, chuyển `play-dir = "+"` và phát xuôi.
+    - If `NoLoop`: Gọi `Pause()`.
+- **Giao diện điều khiển:**
+  - Nút xoay vòng chế độ lặp trên Transport Bar với 3 trạng thái:
+    - `[ ➔ Once ]` (No Loop)
+    - `[ ↻ Loop ]` (Loop)
+    - `[ ⇄ PingPong ]` (Ping Pong)
+  - Phím tắt nhanh: `Ctrl+L` để chuyển đổi nhanh giữa 3 chế độ.
+
+#### C. Thể hiện trực quan đoạn Loop A-B trên Timeline
+- **Trên thanh Timeline chính (`TimelineGrid`):**
+  - Bổ sung `Canvas` chứa `Border` dải lặp `TimelineLoopBand`:
+    - Tọa độ `Left = (LoopStart / Duration) * Width`, `Width = ((LoopEnd - LoopStart) / Duration) * Width`.
+    - Màu nền: `#33F59E0B` (Amber 20% opacity) với viền subtle `#F59E0B`.
+  - Hai cọc mốc giới hạn:
+    - Cọc In-Point `[A]`: Đường kẻ đứng màu vàng hổ phách `#F59E0B` (độ dày 2px) kèm icon cờ mốc `[`.
+    - Cọc Out-Point `[B]`: Đường kẻ đứng màu vàng hổ phách `#F59E0B` kèm icon cờ mốc `]`.
+- **Trên Waveform:** Bổ sung viền trái và viền phải màu hổ phách 2px cho `LoopRect`.
+
+#### D. Chuột phải chọn định dạng hiển thị Timecode / Frame
+- **Khai báo Context Menu:**
+  - Nhấp chuột phải vào `TimelineGrid` hoặc khu vực Timecode để mở ContextMenu:
+    - `Timecode (00:00:00.000)`
+    - `Frame Numbers (#1234)`
+- **Lưu cấu hình:** Lưu giá trị vào `AppSettings.TimeDisplayFormat` (`"Timecode"` / `"Frames"`).
+
+#### E. Nhãn thời gian nổi bám theo đầu đọc Playhead (Theo ảnh tham khảo)
+- **Cấu trúc giao diện Timeline 3 tầng:**
+  - **Tầng 1 (Floating Playhead Label):**
+    - `Canvas` nằm ngay phía trên thanh trượt.
+    - Một thẻ nhãn `FloatingHeadPill` hiển thị số Frame (ví dụ `1` hoặc `1048`) hoặc Timecode (ví dụ `00:00:34.951`) tùy theo định dạng đang chọn.
+    - Tọa độ `X` của thẻ nhãn được căn chỉnh chính xác theo đầu nút Thumb của Slider (`X = (Position / Duration) * ActualWidth`).
+  - **Tầng 2 (Scrubbing Track & Loop Band):**
+    - Thanh trượt, vạch xanh tiến trình, dải màu Loop A-B và nút tròn Thumb.
+  - **Tầng 3 (Timeline Meta Info Row):**
+    - Góc trái: Tổng số khung hình (ví dụ `3760 frames` hoặc thời lượng tổng).
+    - Góc phải: Tần số quét khung hình (ví dụ `29.97 fps` / `60.00 fps`).
+
+#### F. Chỉnh sửa phím tắt Set Loop A/B mặc định thành `,` và `.`
+- Thay đổi ánh xạ phím tắt mặc định:
+  - Phím `OemComma` (`,`) -> Gọi `SetLoopACommand` (đặt điểm bắt đầu In).
+  - Phím `OemPeriod` (`.`) hoặc `OemQuestion` (`/`) -> Gọi `SetLoopBCommand` (đặt điểm kết thúc Out).
+- Cập nhật ToolTip nút `Loop A`: `Set Loop Start (A) [key: ,]`.
+- Cập nhật ToolTip nút `Loop B`: `Set Loop End (B) [key: .]`.
+- Cập nhật văn bản chỉ dẫn Shortcuts ở thanh Footer để người dùng dễ theo dõi.
+
+#### G. Kiến trúc Custom Hotkey System
+- **Mô hình Dữ liệu (`HotkeyBinding.cs` & `HotkeyConfig.cs`):**
+  ```csharp
+  public class HotkeyBinding
+  {
+      public string ActionId { get; set; } = string.Empty;
+      public string DisplayName { get; set; } = string.Empty;
+      public string Category { get; set; } = "Playback"; // Playback, Navigation, Loop, View, File
+      public Key Key { get; set; }
+      public ModifierKeys Modifiers { get; set; } = ModifierKeys.None;
+      public string KeyDisplay => FormatKey(Key, Modifiers);
+  }
+  ```
+- **Danh mục Tác vụ hỗ trợ tùy biến phím tắt:**
+  - *Playback:* Play/Pause (`Space`), Step Forward (`Right`), Step Backward (`Left`), Seek ±1s (`Shift+Right`/`Shift+Left`), Seek ±5s, Toggle Loop Mode (`Ctrl+L`).
+  - *Loop:* Set Loop In A (`,`), Set Loop Out B (`.`), Clear Loop (`\`).
+  - *Navigation & Media:* Jump to Timecode (`Ctrl+G`), Open File A (`Ctrl+O`), Open File B (`Ctrl+Shift+O`).
+  - *View & Audio:* Toggle Fullscreen (`F`), Toggle Waveform (`W`), Toggle Playlist (`P`), Toggle Inspector (`I`), Toggle Mute (`M`), Flip Wipe (`Tab`).
+- **Lưu trữ Cấu hình (`AppSettings.cs`):**
+  - Thêm thuộc tính `Dictionary<string, string> CustomHotkeys { get; set; } = new();` vào `AppSettings`.
+  - Lưu và tải cấu hình phím tắt tự động thông qua `SettingsService`.
+- **Hộp thoại Cài đặt Phím tắt (`HotkeySettingsDialog.xaml`):**
+  - Thiết kế Dark Studio UI:
+    - Bảng phân loại danh sách các lệnh theo nhóm rõ ràng.
+    - Nút ghi phím (Key Recorder): Người dùng click vào và chỉ cần bấm phím/tổ hợp phím trên bàn phím, hệ thống tự động bắt và gán.
+    - Kiểm tra xung đột: Cảnh báo nếu phím tắt vừa bấm đã được gán cho một chức năng khác.
+    - Các nút điều khiển: `Reset Defaults` (Khôi phục mặc định), `Save & Apply` (Lưu & Áp dụng ngay), `Cancel` (Hủy bỏ).
+- **Vị trí mở hộp thoại Hotkeys:**
+  - Nút `⌨ Shortcuts` trên thanh Top Bar (nằm cạnh các nút Waveform, Playlist, Inspector).
+  - Hoặc click trực tiếp vào dòng `Shortcuts: ...` ở thanh trạng thái chân trang.
+
+---
+
+### 3. Kế Hoạch Triển Khai
+1. Cập nhật `AppSettings.cs` & `SettingsService.cs`: Bổ sung `TimeDisplayFormat`, `LoopMode`, và `CustomHotkeys`.
+2. Tạo `HotkeyManager` / `HotkeyBinding` xử lý bắt phím linh hoạt, kiểm tra xung đột và chuyển đổi chuỗi phím.
+3. Cập nhật `PlaybackCoordinator.cs` & `MpvPlayer.cs`: Logic Space Replay EOF, 3 chế độ `PlaybackLoopMode` (NoLoop, Loop, PingPong với `play-dir`).
+4. Cập nhật `MainViewModel.cs`: Thuộc tính định dạng thời gian/frame, floating playhead text, command đổi loop mode, command mở hotkey dialog.
+5. Tạo `HotkeySettingsDialog.xaml` & `HotkeySettingsDialog.xaml.cs`: Giao diện cài đặt tùy biến phím tắt trực quan, bắt phím tự động.
+6. Cập nhật `MainWindow.xaml` & `MainWindow.xaml.cs`:
+   - Bố cục thanh Timeline 3 tầng (Floating pill, Track + Loop band amber + cọc In/Out, Meta info row).
+   - ContextMenu chuột phải trên Timeline (Timecode vs Frame).
+   - Nút xoay vòng Loop Mode trên Transport Bar.
+   - Tích hợp bắt phím thông qua `HotkeyManager` thay vì hardcode phím.
+   - Nút `⌨ Shortcuts` trên Top Bar mở `HotkeySettingsDialog`.
+7. Kiểm thử tự động với test suite và đóng gói ra `bin/publish/`.
+
+
+---
+
+## 11. Kết Quả Triển Khai & Nghiệm Thu (v1.7)
+- [x] **Tự động Replay khi nhấn Space ở cuối video (Space to Replay):**
+  - Trong `PlaybackCoordinator.Play()` và `TogglePlayPause()`, khi video chạm mốc kết thúc (`IsEnded` hoặc `TimePos >= Duration - 0.08s`), chương trình tự động tua về đầu (`0.0s` hoặc `LoopStart`) và tiếp tục phát.
+- [x] **Bộ 3 chế độ lặp (No Loop / Loop / Ping Pong):**
+  - Enum `PlaybackLoopMode` hỗ trợ 3 chế độ: `NoLoop`, `Loop`, `PingPong`.
+  - Tích hợp `SetPlayDirection(bool forward)` với thuộc tính `play-dir` (`+` / `-`) của engine MPV.
+  - Nút chuyển chế độ lặp trên thanh Transport Bar kèm icon vector đổi trạng thái (`Once`, `Loop`, `PingPong`) và phím tắt nhanh `Ctrl+L`.
+- [x] **Thể hiện trực quan đoạn Loop A-B trên Timeline:**
+  - Dải lặp `TimelineLoopBand` màu vàng hổ phách (`#33F59E0B`, viền `#F59E0B`) bao trọn khoảng thời gian từ In đến Out.
+  - Cọc mốc In `[` (`TimelineLoopInMarker`) và Out `]` (`TimelineLoopOutMarker`) màu vàng hổ phách sắc nét.
+  - Đồng bộ viền trái và phải màu vàng hổ phách cho `LoopRect` trên `WaveformControl`.
+- [x] **Menu chuột phải chọn định dạng Timecode / Frame:**
+  - Nhấp chuột phải vào `TimelineGrid` hoặc cụm Timecode để chuyển đổi giữa `Timecode (00:00:00.000)` và `Frames (#1234)`.
+  - Lựa chọn được lưu vào `AppSettings.TimeDisplayFormat` để duy trì cho các lần mở sau.
+- [x] **Nhãn thời gian nổi & Thông số Timeline (Chuẩn theo ảnh tham khảo):**
+  - Thiết kế Timeline 3 tầng:
+    + Tầng 1: Thẻ nhãn `FloatingPlayheadPill` màu xanh cyan bám sát đầu nút đọc Playhead thời gian thực, hiển thị số frame hiện tại (ví dụ: `1`) hoặc timecode.
+    + Tầng 2: Vùng scrubbing, dải màu Loop A-B và thanh trượt tiến trình.
+    + Tầng 3: Góc trái hiển thị tổng số frame (ví dụ: `3760 frames`), góc phải hiển thị tần số quét (ví dụ: `29.97 fps`).
+- [x] **Chỉnh sửa phím tắt Set Loop A/B mặc định thành `,` và `.`:**
+  - Phím `,` (`OemComma`): Đặt điểm bắt đầu In (Loop A).
+  - Phím `.` (`OemPeriod`): Đặt điểm kết thúc Out (Loop B) và hỗ trợ cả `/` (`OemQuestion`).
+  - Cập nhật ToolTip nút Loop A, B và dòng hiển thị Shortcuts ở chân trang.
+- [x] **Hệ thống Custom Hotkey toàn diện:**
+  - `HotkeyManager` quản lý tập trung và ánh xạ phím tắt linh hoạt.
+  - Hộp thoại `HotkeySettingsDialog` chuẩn Studio Dark với tính năng ghi phím trực tiếp (Key Recording), cảnh báo xung đột và khôi phục mặc định (Reset to Defaults).
+  - Lưu trữ tự động vào `settings.json`.
+  - Nút mở nhanh `⌨ Shortcuts` trên thanh Top Bar và click vào dòng Shortcuts ở chân trang.
+- [x] **Kiểm thử tự động:** 39/39 test cases PASS (100% Green).
+- [x] **Đóng gói phát hành:** Đã build và publish thành công ra `bin\publish\LumiePlayer.exe`.

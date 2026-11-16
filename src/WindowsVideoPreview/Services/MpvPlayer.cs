@@ -319,6 +319,25 @@ public class MpvPlayer : IDisposable
         }
     }
 
+    public bool IsPlayingForward { get; private set; } = true;
+
+    public void SetPlayDirection(bool forward)
+    {
+        lock (_lock)
+        {
+            if (_client == null) return;
+            try
+            {
+                SafeSetProperty("play-dir", forward ? "+" : "-");
+                IsPlayingForward = forward;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MpvPlayer] SetPlayDirection failed: {ex.Message}");
+            }
+        }
+    }
+
     public void SetVolume(double volume)
     {
         lock (_lock)
